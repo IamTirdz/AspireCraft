@@ -1,0 +1,28 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+	<ImplicitUsings>enable</ImplicitUsings>
+	<PackAsTool>true</PackAsTool>
+	<ToolCommandName>aspirecraft</ToolCommandName>
+	<PackageId>AspireCraft</PackageId>
+	<Version>1.1.0</Version>
+	<Authors>Teejay</Authors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Spectre.Console" Version="0.54.0" />
+    <PackageReference Include="Spectre.Console.Cli" Version="0.53.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+	<None Include="../../templates/**">
+	  <Pack>true</Pack>
+	  <PackagePath>tools/net8.0/any/templates/</PackagePath>
+	  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	</None>
+  </ItemGroup>
+
+</Project>
