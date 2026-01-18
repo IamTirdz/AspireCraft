@@ -63,3 +63,6 @@ Whether you are building a monolith or a distributed microservice, Aspire Craft 
   - Architecture Tests  
 
 ---
+
+
+![CLI GIF](assets/cli.gif)
