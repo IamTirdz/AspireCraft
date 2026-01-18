@@ -1,4 +1,5 @@
 ﻿using AspireCraft.CLI.Common.Constants;
+using AspireCraft.CLI.Common.Extensions;
 using AspireCraft.CLI.Common.Models;
 using Spectre.Console;
 using System.Diagnostics;
@@ -17,7 +18,7 @@ public sealed class ProjectTemplateRenderer
             throw new DirectoryNotFoundException($"Template folder not found: {templateDir}");
         }
 
-        var targetDir = Path.Combine(Directory.GetCurrentDirectory(), config.Name);
+        var targetDir = Path.Combine(Directory.GetCurrentDirectory(), config.ProjectName);
         if (Directory.Exists(targetDir))
         {
             bool overwrite = AnsiConsole.Confirm("Target folder exists. Overwrite?", false);
@@ -27,29 +28,25 @@ public sealed class ProjectTemplateRenderer
             Directory.Delete(targetDir, recursive: true);
         }
 
-        AnsiConsole.MarkupLine($"[green]Copying directory...[/]");
-
+        AppConsole.WriteLine($"[green] Creating project solution...[/]");
         CopyDirectory(templateDir, targetDir);
+        CreateSolution(config.ProjectName, targetDir);
 
-        //AnsiConsole.MarkupLine($"[green]Replacing token...[/]");
-        //ReplaceTokens(targetDir, config.Name);
+        AppConsole.WriteLine($"[green] Creating backend...[/]");
+        ReplaceTokens(targetDir, config.ProjectName);
+        AddBackendReferences(config.ProjectName, targetDir);
 
-        AnsiConsole.MarkupLine($"[green]Creating solution...[/]");
-        CreateSolution(config.Name, targetDir);
+        AppConsole.WriteLine($"[green] Creating dashboard...[/]");
+        AddDashboardReferences(config.ProjectName, targetDir);
 
-        AnsiConsole.MarkupLine($"[green]Generated backend...[/]");
-        ReplaceTokens(targetDir, config.Name);
-        AddBackendReferences(config.Name, targetDir);
+        AppConsole.WriteLine($"[green] Creating tests...[/]");
+        AddProjectTestReferences(config.ProjectName, targetDir);
 
-        AnsiConsole.MarkupLine($"[green]Generated dashboard...[/]");
-        AddDashboardReferences(config.Name, targetDir);
-
-        AnsiConsole.MarkupLine($"[green]Generated tests...[/]");
-        AddProjectTestReferences(config.Name, targetDir);
+        AppConsole.WriteLine($"[green] Successfully created![/]");
+        AppConsole.WriteLine();
+        AppConsole.WriteLine($"[white]Done.[/]", isEnd: true);
 
         RunDotNet(targetDir, "restore");
-
-        AnsiConsole.MarkupLine($"[green]✔ Project '{config.Name}' generated successfully[/]");
     }
 
     private static string ResolveTemplate(string templateName)
@@ -65,10 +62,6 @@ public sealed class ProjectTemplateRenderer
 
     private static string ResolveTemplatesRoot()
     {
-        //var templateDir = Path.Combine(AppContext.BaseDirectory, "templates");
-        //if (Directory.Exists(templateDir))
-        //    return templateDir;
-
         var dir = new DirectoryInfo(AppContext.BaseDirectory);
         while (dir != null)
         {

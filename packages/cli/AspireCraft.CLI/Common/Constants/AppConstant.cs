@@ -2,5 +2,5 @@
 
 public static class AppConstant
 {
-    public const string ProjectName = nameof(ProjectName);
+    public const string ProjectName = "AspireCraft";
 }

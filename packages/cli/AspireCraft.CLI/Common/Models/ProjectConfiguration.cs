@@ -2,18 +2,18 @@
 
 public class ProjectConfiguration
 {
-    public ProjectConfiguration(string name, string framework, string database, string auth, bool redis)
-    {
-        Name = name;
-        Framework = framework;
-        Database = database;
-        Auth = auth;
-        Redis = redis;
-    }
-
-    public string Name { get; set; }
-    public string Framework { get; set; }
-    public string Database { get; set; }
-    public string Auth { get; set; }
-    public bool Redis { get; set; }
+    public string ProjectName { get; set; } = string.Empty;
+    public string Architecture { get; set; } = string.Empty;
+    public string Framework { get; set; } = string.Empty;
+    public string AuthenticationType { get; set; } = string.Empty;
+    public bool UseControllers { get; set; }
+    public string DatabaseContext { get; set; } = string.Empty;
+    public string DatabaseProvider { get; set; } = string.Empty;
+    public bool UseNetAspire { get; set; }
+    public bool UsePolly { get; set; }
+    public bool UseSerilog { get; set; }
+    public string? Cache { get; set; }
+    public List<string> Messaging { get; set; } = new List<string>();
+    public string? BackgroundProcess { get; set; }
+    public List<string> Testing { get; set; } = new List<string>();
 }
