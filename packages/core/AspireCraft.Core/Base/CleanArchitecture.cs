@@ -5,6 +5,7 @@ using AspireCraft.Core.Common.Enums;
 using AspireCraft.Core.Common.Models;
 using AspireCraft.Core.Database;
 using AspireCraft.Core.Mailer.Providers;
+using AspireCraft.Core.Messaging;
 using AspireCraft.Core.Payments;
 using AspireCraft.Core.Renderers;
 using AspireCraft.Core.Sms;
@@ -52,6 +53,11 @@ public sealed class CleanArchitecture : ITemplateArchitecture
             // storage
             new AzureBlobInstaller(),
             new AwsS3BucketInstaller(),
+
+            // messaging
+            new RabbitMqInstaller(),
+            new KafkaInstaller(),
+            new ServiceBusInstaller(),
         };
     }
 
