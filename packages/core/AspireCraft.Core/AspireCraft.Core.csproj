@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Folder Include="Auth\" />
+    <Folder Include="Mailer\SMTP\" />
+    <Folder Include="Storage\" />
+    <Folder Include="Payments\" />
+    <Folder Include="Sms\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\cli\AspireCraft.CLI\AspireCraft.CLI.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,19 +1,21 @@
-﻿namespace AspireCraft.CLI.Common.Models;
+﻿using AspireCraft.CLI.Common.Enums;
+
+namespace AspireCraft.CLI.Common.Models;
 
 public class ProjectConfiguration
 {
     public string ProjectName { get; set; } = string.Empty;
-    public string Architecture { get; set; } = string.Empty;
+    public ArchitectureType Architecture { get; set; }
     public string Framework { get; set; } = string.Empty;
-    public string AuthenticationType { get; set; } = string.Empty;
-    public bool UseControllers { get; set; }
-    public string DatabaseContext { get; set; } = string.Empty;
-    public string DatabaseProvider { get; set; } = string.Empty;
+    public AuthenticationType Authentication { get; set; }
+    public bool UseControllers { get; set; } // web api | minimal api
+    public string DbContextName { get; set; } = string.Empty;
+    public DatabaseProvider Database { get; set; }
+
     public bool UseNetAspire { get; set; }
-    public bool UsePolly { get; set; }
-    public bool UseSerilog { get; set; }
-    public string? Cache { get; set; }
-    public List<string> Messaging { get; set; } = new List<string>();
-    public string? BackgroundProcess { get; set; }
-    public List<string> Testing { get; set; } = new List<string>();
+    public List<IntegrationType> Integrations { get; set; } = new();
+
+    public bool IncludeUnitTests { get; set; } = false;
+    public bool IncludeIntegrationTests { get; set; } = false;
+    public bool IncludeArchitectureTests { get; set; } = false;
 }

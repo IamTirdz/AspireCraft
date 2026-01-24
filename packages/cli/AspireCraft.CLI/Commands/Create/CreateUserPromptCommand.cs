@@ -1,4 +1,5 @@
-﻿using AspireCraft.CLI.Common.Extensions;
+﻿using AspireCraft.CLI.Common.Enums;
+using AspireCraft.CLI.Common.Extensions;
 using AspireCraft.CLI.Common.Models;
 
 namespace AspireCraft.CLI.Commands.Create;
@@ -10,68 +11,80 @@ public sealed class CreateUserPromptCommand
         AppConsole.WriteLine("[yellow]Let's get started[/]", isStart: true);
 
         var projectName = AppConsole.Prompt("Project name");
-        var architecture = AppConsole.SelectionPrompt("Architecture type", new string[] { "Clean Architecture" });
-        var framework = AppConsole.SelectionPrompt("Framework", new string[] { ".NET 8.0 (LTS)", ".NET 9.0", ".NET 10.0 (preview)" });
-        var useControllers = AppConsole.Prompt("Use controllers", true);
-        var authentication = AppConsole.SelectionPrompt("Authentication type", new string[] { "Identity + JWT", "OpenId Connect", "None" });
+        var architecture = AppConsole.SelectionPrompt("Architecture type", Enum.GetValues(typeof(ArchitectureType)).ToEnumList());
+        var framework = AppConsole.SelectionPrompt("Framework", Enum.GetValues(typeof(NetFramework)).ToEnumList());
+        var useControllers = AppConsole.Prompt("Use controllers?", true);
+        var authentication = AppConsole.SelectionPrompt("Authentication type", Enum.GetValues(typeof(AuthenticationType)).ToEnumList());
 
         var dbContextName = AppConsole.Prompt("DbContext name:");
-        var dbProvider = AppConsole.SelectionPrompt("Database Provider", new string[] { "PostgreSQL", "SQL Server", "MySQL", "SQLite" });
+        var dbProvider = AppConsole.SelectionPrompt("Database Provider", Enum.GetValues(typeof(DatabaseProvider)).ToEnumList());
 
-        // Orchestration
-        var useNetAspire = AppConsole.Prompt("Enlist in .NET aspire orchestration", false);
+        var useNetAspire = AppConsole.Prompt("Use .NET aspire orchestration?", false);
+        var availableIntegrations = IntegrationCatalog.GetAvailableIntegrations(useNetAspire);
 
-        bool usePolly = false;
-        bool useSerilog = false;
-        string[] messagingOptions;
-        string[] cachingOptions;
-        if (useNetAspire)
-        {
-            usePolly = AppConsole.Prompt("Use Polly", true);
-            messagingOptions = new string[] { "RabbitMQ", "Kafka", "Service Bus" };
-            cachingOptions = new string[] { "Redis", "In-Memory" };
-        }
-        else
-        {
-            useSerilog = AppConsole.Prompt("Use Serilog", false);
-            messagingOptions = new string[] { "RabbitMQ", "Kafka", "Service Bus", "None" };
-            cachingOptions = new string[] { "Redis", "In-Memory", "None" };
-        }
+        var selectedIntegrations = new List<IntegrationType>();
 
-        var messaging = AppConsole.MultiSelectionPrompt("Messaging", messagingOptions);
-        var caching = AppConsole.SelectionPrompt("Cache", cachingOptions);
+        var emailIntegrations = availableIntegrations
+            .Where(i => i == IntegrationType.SendGrid || i == IntegrationType.Mailgun)
+            .Select(i => i.ToEnumValue())
+            .ToList();
+        var emailIntegration = AppConsole.MultiSelectionPrompt("Email", emailIntegrations);
+        selectedIntegrations.AddRange(emailIntegration.Select(name => Enum.Parse<IntegrationType>(name)));
 
-        string? backgroundProcess = null;
-        var includeBgProcess = AppConsole.Prompt("Include Background process?", false);
-        if (includeBgProcess)
-        {
-            backgroundProcess = AppConsole.SelectionPrompt("Background processing", new string[] { "Hosted Services", "Quartz.NET", "Hangfire" });
-        }
+        var smsIntegrations = availableIntegrations
+            .Where(i => i == IntegrationType.Wavecell || i == IntegrationType.Twilio)
+            .Select(i => i.ToEnumValue())
+            .ToList();
+        var smsIntegration = AppConsole.MultiSelectionPrompt("SMS", smsIntegrations);
+        selectedIntegrations.AddRange(smsIntegration.Select(name => Enum.Parse<IntegrationType>(name)));
 
-        List<string> testing = new List<string>();
-        var includeTesting = AppConsole.Prompt("Include Tests?", false);
-        if (includeTesting)
-        {
-            testing = AppConsole.MultiSelectionPrompt("Testing", new string[] { "Unit Tests", "Integration Tests", "Architecture Tests" });
-        }
+        var storageIntegrations = availableIntegrations
+            .Where(i => i == IntegrationType.AzureBlob || i == IntegrationType.AwsS3Bucket)
+            .Select(i => i.ToEnumValue())
+            .ToList();
+        var storageIntegration = AppConsole.MultiSelectionPrompt("Storage", storageIntegrations);
+        selectedIntegrations.AddRange(storageIntegration.Select(name => Enum.Parse<IntegrationType>(name)));
+
+        var messagingIntegrations = availableIntegrations
+            .Where(i => i == IntegrationType.RabbitMQ || i == IntegrationType.Kafka || i == IntegrationType.ServiceBus)
+            .Select(i => i.ToEnumValue())
+            .ToList();
+        var messagingIntegration = AppConsole.MultiSelectionPrompt("Messaging", messagingIntegrations);
+        selectedIntegrations.AddRange(messagingIntegration.Select(name => Enum.Parse<IntegrationType>(name)));
+
+        var cacheIntegrations = availableIntegrations
+            .Where(i => i == IntegrationType.Redis || i == IntegrationType.InMemory)
+            .Select(i => i.ToEnumValue())
+            .ToList();
+        var cacheIntegration = AppConsole.MultiSelectionPrompt("Caching", cacheIntegrations);
+        selectedIntegrations.AddRange(cacheIntegration.Select(name => Enum.Parse<IntegrationType>(name)));
+
+        var paymentIntegrations = availableIntegrations
+            .Where(i => i == IntegrationType.Paypal || i == IntegrationType.Stripe)
+            .Select(i => i.ToEnumValue())
+            .ToList();
+        var paymentIntegration = AppConsole.MultiSelectionPrompt("Payment", paymentIntegrations);
+        selectedIntegrations.AddRange(paymentIntegration.Select(name => Enum.Parse<IntegrationType>(name)));
+
+        var includeUnitTest = AppConsole.Prompt("Include Unit Tests?", false);
+        var includeIntegrationTest = AppConsole.Prompt("Include Integration Tests?", false);
+        var includeArchitectureTest = AppConsole.Prompt("Include Architecture Tests?", false);
 
         var solutionName = projectName.Replace(" ", string.Empty);
         return new ProjectConfiguration
         {
             ProjectName = solutionName,
-            Architecture = architecture,
+            Architecture = (ArchitectureType)Enum.Parse(typeof(ArchitectureType), architecture),
             Framework = framework,
-            AuthenticationType = authentication,
+            Authentication = (AuthenticationType)Enum.Parse(typeof(AuthenticationType), authentication),
             UseControllers = useControllers,
-            DatabaseContext = dbContextName,
-            DatabaseProvider = dbProvider,
+            DbContextName = dbContextName,
+            Database = (DatabaseProvider)Enum.Parse(typeof(DatabaseProvider), dbProvider),
             UseNetAspire = useNetAspire,
-            UsePolly = usePolly,
-            UseSerilog = useSerilog,
-            Cache = caching,
-            Messaging = messaging,
-            BackgroundProcess = backgroundProcess,
-            Testing = testing,
+            Integrations = selectedIntegrations,
+            IncludeUnitTests = includeUnitTest,
+            IncludeIntegrationTests = includeIntegrationTest,
+            IncludeArchitectureTests = includeArchitectureTest,
         };
     }
 }
