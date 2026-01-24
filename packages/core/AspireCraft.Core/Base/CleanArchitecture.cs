@@ -5,6 +5,7 @@ using AspireCraft.Core.Common.Models;
 using AspireCraft.Core.Database;
 using AspireCraft.Core.Mailer.Providers;
 using AspireCraft.Core.Renderers;
+using AspireCraft.Core.Sms;
 
 namespace AspireCraft.Core.Base;
 
@@ -17,15 +18,24 @@ public sealed class CleanArchitecture : ITemplateArchitecture
     {
         _packages = new List<IPackageInstaller>
         {
+            // database
             new SqlServerInstaller(),
             new PostgreSqlInstaller(),
             new MySqlInstaller(),
             new SqliteInstaller(),
             new MongoDbInstaller(),
+
+            // cache
             new RedisCacheInstaller(),
             new InMemoryCacheInstaller(),
+
+            // email
             new SendGridInstaller(),
             new MailgunInstaller(),
+
+            // sms
+            new TwilioInstaller(),
+            new WavecellInstaller(),
         };
     }
 
