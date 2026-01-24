@@ -1,6 +1,7 @@
 ﻿using AspireCraft.Core.Common.Enums;
+using AspireCraft.Core.Common.Extensions;
 
-namespace AspireCraft.Core.Common.Extensions;
+namespace AspireCraft.Core.Base;
 
 public static class IntegrationCatalog
 {

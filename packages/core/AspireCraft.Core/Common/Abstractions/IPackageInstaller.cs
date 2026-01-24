@@ -6,5 +6,5 @@ namespace AspireCraft.Core.Common.Abstractions;
 public interface IPackageInstaller
 {
     bool CanInstall(ProjectConfiguration configuration);
-    void Install(TemplateContext context);
+    void Install(ProjectConfiguration configuration, TemplateContext context);
 }

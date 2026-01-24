@@ -8,10 +8,10 @@ public sealed class TemplateContext
 
     public void Render(string templatePath, string outputPath)
     {
-        var content = File.ReadAllText(templatePath);
         var outputDir = Path.Combine(RootPath, outputPath);
-
         Directory.CreateDirectory(Path.GetDirectoryName(outputDir)!);
+
+        var content = File.ReadAllText(templatePath);
         File.WriteAllText(outputDir, content.Replace(AppConstant.ProjectName, Path.GetFileName(RootPath)));
     }
 

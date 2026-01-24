@@ -5,11 +5,11 @@ using AspireCraft.Core.Renderers;
 
 namespace AspireCraft.Core.Database;
 
-public sealed class SqlServerInstaller : IPackageInstaller
+public sealed class MySqlInstaller : IPackageInstaller
 {
     public bool CanInstall(ProjectConfiguration configuration)
     {
-        return configuration.Integrations.Contains(IntegrationType.SqlServer);
+        return configuration.Integrations.Contains(IntegrationType.MySQL);
     }
 
     public void Install(ProjectConfiguration configuration, TemplateContext context)
@@ -26,6 +26,6 @@ public sealed class SqlServerInstaller : IPackageInstaller
         var output = Path.Combine(context.RootPath, "src", directory, "DbContext.cs");
 
         context.Render(template, output);
-        context.AddPackage("Microsoft.EntityFrameworkCore.SqlServer");
+        context.AddPackage("Pomelo.EntityFrameworkCore.MySql");
     }
 }
