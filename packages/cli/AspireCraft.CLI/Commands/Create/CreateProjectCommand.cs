@@ -1,5 +1,5 @@
-﻿using AspireCraft.CLI.Common.Extensions;
-using AspireCraft.CLI.Renderers;
+﻿using AspireCraft.Core.Common.Extensions;
+using AspireCraft.Core.Renderers;
 using Spectre.Console;
 using Spectre.Console.Cli;
 
@@ -14,8 +14,8 @@ public sealed class CreateProjectCommand : Command
 
         AppConsole.WriteLine();
 
-        var renderer = new ProjectTemplateRenderer();
-        renderer.Generate(config);
+        var renderer = new TemplateRenderer();
+        renderer.Run(config);
 
         AnsiConsole.WriteLine();
         AnsiConsole.WriteLine();

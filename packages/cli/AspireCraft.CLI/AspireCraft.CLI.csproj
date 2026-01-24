@@ -13,16 +13,15 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Spectre.Console" Version="0.54.0" />
-    <PackageReference Include="Spectre.Console.Cli" Version="0.53.1" />
-  </ItemGroup>
-
-  <ItemGroup>
 	<None Include="../../templates/**">
 	  <Pack>true</Pack>
 	  <PackagePath>tools/net8.0/any/templates/</PackagePath>
 	  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	</None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\core\AspireCraft.Core\AspireCraft.Core.csproj" />
   </ItemGroup>
 
 </Project>

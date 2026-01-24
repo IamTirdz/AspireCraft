@@ -1,6 +1,6 @@
-﻿using AspireCraft.CLI.Common.Enums;
-using AspireCraft.CLI.Common.Extensions;
-using AspireCraft.CLI.Common.Models;
+﻿using AspireCraft.Core.Common.Enums;
+using AspireCraft.Core.Common.Extensions;
+using AspireCraft.Core.Common.Models;
 
 namespace AspireCraft.CLI.Commands.Create;
 
