@@ -4,6 +4,7 @@ using AspireCraft.Core.Common.Enums;
 using AspireCraft.Core.Common.Models;
 using AspireCraft.Core.Database;
 using AspireCraft.Core.Mailer.Providers;
+using AspireCraft.Core.Payments;
 using AspireCraft.Core.Renderers;
 using AspireCraft.Core.Sms;
 using AspireCraft.Core.Storage;
@@ -37,6 +38,10 @@ public sealed class CleanArchitecture : ITemplateArchitecture
             // sms
             new TwilioInstaller(),
             new WavecellInstaller(),
+
+            // payments
+            new StripeInstaller(),
+            new PaypalInstaller(),
 
             // storage
             new AzureBlobInstaller(),
