@@ -25,7 +25,7 @@ public sealed class CreateProjectCommand : Command
                     new Markup($"► Then run the project")
                 )
             )
-            .Header($"[yellow]{config.ProjectName} Backend[/]")
+            .Header($"[yellow] {config.ProjectName} [/]")
             .Border(BoxBorder.Rounded)
             .Padding(3, 1, 3, 1);
         AnsiConsole.Write(panel);

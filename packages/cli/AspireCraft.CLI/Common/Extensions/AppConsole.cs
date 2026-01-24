@@ -11,25 +11,22 @@ public static class AppConsole
     private const string TextColor = "white";
     private const string PrimaryColor = "blue";
 
-    public static void WriteLine(string? text = null, bool isStart = false, bool isEnd = false)
+    public static void WriteLine(string? text = null, bool includeIndicator = true, bool isStart = false, bool isEnd = false)
     {
-        if (isStart)
+        string prefix = string.Empty;
+        if (includeIndicator)
         {
-            AnsiConsole.MarkupLine($"[{BaseColor}]┌[/] {text}");
+            if (isStart) prefix = $"[{BaseColor}]┌[/] ";
+            else if (isEnd) prefix = $"[{BaseColor}]└[/] ";
+            else prefix = $"[{BaseColor}]│[/] ";
         }
-        else if (isEnd)
-        {
-            AnsiConsole.MarkupLine($"[{BaseColor}]└[/] {text}");
-        }
-        else
-        {
-            AnsiConsole.MarkupLine($"[{BaseColor}]│[/] {text}");
-        }
+
+        AnsiConsole.MarkupLine($"{prefix}{text}");
     }
 
     public static string Prompt(string text)
     {
-        WriteLine();
+        AnsiConsole.WriteLine();
         AnsiConsole.MarkupLine($"[{PrimaryColor}]◇[/][{TextColor}] {Markup.Escape(text)}[/]");
 
         var result = AnsiConsole.Prompt(
@@ -42,7 +39,7 @@ public static class AppConsole
 
     public static bool Prompt(string text, bool? defaultValue)
     {
-        WriteLine();
+        AnsiConsole.WriteLine();
         AnsiConsole.MarkupLine($"[{PrimaryColor}]◇[/][{TextColor}] {Markup.Escape(text)}[/]");
 
         var options = defaultValue.HasValue
@@ -62,7 +59,7 @@ public static class AppConsole
 
     public static string SelectionPrompt(string text, IEnumerable<string> choices)
     {
-        WriteLine();
+        AnsiConsole.WriteLine();
         AnsiConsole.MarkupLine($"[{PrimaryColor}]◇[/][{TextColor}] {Markup.Escape(text)}[/]");
 
         var choiceList = choices.ToList();
