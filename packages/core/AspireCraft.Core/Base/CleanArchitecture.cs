@@ -3,6 +3,7 @@ using AspireCraft.Core.Common.Abstractions;
 using AspireCraft.Core.Common.Enums;
 using AspireCraft.Core.Common.Models;
 using AspireCraft.Core.Database;
+using AspireCraft.Core.Mailer.Providers;
 using AspireCraft.Core.Renderers;
 
 namespace AspireCraft.Core.Base;
@@ -23,6 +24,8 @@ public sealed class CleanArchitecture : ITemplateArchitecture
             new MongoDbInstaller(),
             new RedisCacheInstaller(),
             new InMemoryCacheInstaller(),
+            new SendGridInstaller(),
+            new MailgunInstaller(),
         };
     }
 
