@@ -1,4 +1,5 @@
-﻿using AspireCraft.Core.Common.Abstractions;
+﻿using AspireCraft.Core.Cache;
+using AspireCraft.Core.Common.Abstractions;
 using AspireCraft.Core.Common.Enums;
 using AspireCraft.Core.Common.Models;
 using AspireCraft.Core.Database;
@@ -20,6 +21,8 @@ public sealed class CleanArchitecture : ITemplateArchitecture
             new MySqlInstaller(),
             new SqliteInstaller(),
             new MongoDbInstaller(),
+            new RedisCacheInstaller(),
+            new InMemoryCacheInstaller(),
         };
     }
 
