@@ -1,16 +1,15 @@
-﻿using AspireCraft.CLI.Common.Enums;
-using AspireCraft.CLI.Common.Extensions;
-using AspireCraft.CLI.Common.Models;
-using AspireCraft.CLI.Renderers;
-using AspireCraft.Core.Base;
+﻿using AspireCraft.Core.Base;
+using AspireCraft.Core.Common.Enums;
+using AspireCraft.Core.Common.Extensions;
+using AspireCraft.Core.Common.Models;
 
-namespace AspireCraft.Core;
+namespace AspireCraft.Core.Renderers;
 
-public static class ProjectGenerator
+public sealed class TemplateRenderer
 {
-    public static void Run(ProjectConfiguration project)
+    public void Run(ProjectConfiguration project)
     {
-        var context = new GenerationContext
+        var context = new TemplateContext
         {
             RootPath = Path.Combine(Directory.GetCurrentDirectory(), project.ProjectName)
         };

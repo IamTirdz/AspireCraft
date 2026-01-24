@@ -1,11 +1,11 @@
-﻿using AspireCraft.CLI.Common.Abstractions;
-using AspireCraft.CLI.Common.Models;
-using AspireCraft.CLI.Renderers;
-using AspireCraft.Core.Database.SqlServer;
+﻿using AspireCraft.Core.Common.Abstractions;
+using AspireCraft.Core.Common.Models;
+using AspireCraft.Core.Database;
+using AspireCraft.Core.Renderers;
 
 namespace AspireCraft.Core.Base;
 
-public class CleanArchitecture : ITemplateArchitecture
+public sealed class CleanArchitecture : ITemplateArchitecture
 {
     public string Name => "CleanArchitecture";
     private readonly List<IPackageInstaller> _packages;
@@ -18,7 +18,7 @@ public class CleanArchitecture : ITemplateArchitecture
         };
     }
 
-    public void Generate(ProjectConfiguration configuration, GenerationContext context)
+    public void Generate(ProjectConfiguration project, TemplateContext context)
     {
         Directory.CreateDirectory(Path.Combine(context.RootPath, "src", "Domain"));
         Directory.CreateDirectory(Path.Combine(context.RootPath, "src", "Application"));
@@ -27,7 +27,7 @@ public class CleanArchitecture : ITemplateArchitecture
 
         foreach (var package in _packages)
         {
-            if (package.CanInstall(configuration))
+            if (package.CanInstall(project))
                 package.Install(context);
         }
     }
