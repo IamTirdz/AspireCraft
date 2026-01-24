@@ -1,4 +1,5 @@
-﻿using AspireCraft.Core.Cache;
+﻿using AspireCraft.Core.Auth;
+using AspireCraft.Core.Cache;
 using AspireCraft.Core.Common.Abstractions;
 using AspireCraft.Core.Common.Enums;
 using AspireCraft.Core.Common.Models;
@@ -30,6 +31,11 @@ public sealed class CleanArchitecture : ITemplateArchitecture
             // cache
             new RedisCacheInstaller(),
             new InMemoryCacheInstaller(),
+
+            // auth
+            new JwtInstaller(),
+            new Auth0Installer(),
+            new DuendeIdentityInstaller(),
 
             // email
             new SendGridInstaller(),
