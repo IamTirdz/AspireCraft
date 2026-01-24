@@ -3,13 +3,13 @@ using AspireCraft.Core.Common.Enums;
 using AspireCraft.Core.Common.Models;
 using AspireCraft.Core.Renderers;
 
-namespace AspireCraft.Core.Sms;
+namespace AspireCraft.Core.Storage;
 
-public sealed class TwilioInstaller : IPackageInstaller
+public sealed class AwsS3BucketInstaller : IPackageInstaller
 {
     public bool CanInstall(ProjectConfiguration configuration)
     {
-        return configuration.Integrations.Contains(IntegrationType.Twilio);
+        return configuration.Integrations.Contains(IntegrationType.AwsS3Bucket);
     }
 
     public void Install(ProjectConfiguration configuration, TemplateContext context)
@@ -22,10 +22,10 @@ public sealed class TwilioInstaller : IPackageInstaller
             _ => throw new NotSupportedException("Unsupported architecture")
         };
 
-        var template = Path.Combine("templates", $"{configuration.Architecture}", directory, "SMS", "TwilioService.cs.txt");
-        var output = Path.Combine(context.RootPath, "src", directory, "SMS", "TwilioService.cs");
+        var template = Path.Combine("templates", $"{configuration.Architecture}", directory, "Storage", "AwsS3BucketService.cs.txt");
+        var output = Path.Combine(context.RootPath, "src", directory, "Storage", "AwsS3BucketService.cs");
 
         context.Render(template, output);
-        context.AddPackage("Twilio");
+        context.AddPackage("AWSSDK.S3");
     }
 }

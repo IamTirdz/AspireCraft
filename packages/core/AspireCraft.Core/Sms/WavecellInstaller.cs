@@ -17,7 +17,7 @@ public sealed class WavecellInstaller : IPackageInstaller
         string directory = configuration.Architecture switch
         {
             ArchitectureType.CleanArchitecture => "Infrastructure/Services",
-            ArchitectureType.NLayer => "Services",
+            ArchitectureType.NLayer => "Data",
             ArchitectureType.Serverless => "Infrastructure/Services",
             _ => throw new NotSupportedException("Unsupported architecture")
         };
