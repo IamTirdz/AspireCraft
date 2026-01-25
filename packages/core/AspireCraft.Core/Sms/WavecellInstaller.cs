@@ -1,4 +1,5 @@
 ﻿using AspireCraft.Core.Common.Abstractions;
+using AspireCraft.Core.Common.Constants;
 using AspireCraft.Core.Common.Enums;
 using AspireCraft.Core.Common.Models;
 using AspireCraft.Core.Renderers;
@@ -14,16 +15,9 @@ public sealed class WavecellInstaller : IPackageInstaller
 
     public void Install(ProjectConfiguration configuration, TemplateContext context)
     {
-        string directory = configuration.Architecture switch
-        {
-            ArchitectureType.CleanArchitecture => "Infrastructure/Services",
-            ArchitectureType.NLayer => "Data",
-            ArchitectureType.Serverless => "Infrastructure/Services",
-            _ => throw new NotSupportedException("Unsupported architecture")
-        };
-
+        var directory = context.Renderer.GetFolderPath(AppLayerConstant.Services);
         var template = Path.Combine("templates", $"{configuration.Architecture}", directory, "Sms", "WavecellService.cs.txt");
-        var output = Path.Combine(context.RootPath, "src", directory, "Sms", "WavecellService.cs");
+        var output = Path.Combine(context.TargetDirectory, "src", directory, "Sms", "WavecellService.cs");
 
         context.Render(template, output);
         context.AddPackage("Wavecell.Api");
