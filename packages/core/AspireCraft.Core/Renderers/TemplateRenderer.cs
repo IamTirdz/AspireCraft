@@ -1,29 +1,70 @@
-﻿using AspireCraft.Core.Base;
-using AspireCraft.Core.Common.Enums;
-using AspireCraft.Core.Common.Extensions;
+﻿using AspireCraft.Core.Auth;
+using AspireCraft.Core.Base;
+using AspireCraft.Core.Cache;
+using AspireCraft.Core.Common.Abstractions;
 using AspireCraft.Core.Common.Models;
+using AspireCraft.Core.Database;
+using AspireCraft.Core.Mailer.Providers;
+using AspireCraft.Core.Messaging;
+using AspireCraft.Core.Payments;
+using AspireCraft.Core.Sms;
+using AspireCraft.Core.Storage;
 
 namespace AspireCraft.Core.Renderers;
 
 public sealed class TemplateRenderer
 {
-    public void Run(ProjectConfiguration project)
+    private readonly IEnumerable<IProjectTemplate> _templates;
+    private readonly IEnumerable<IProjectRenderer> _renderers;
+
+    public TemplateRenderer()
     {
-        var context = new TemplateContext
+        _renderers = new List<IProjectRenderer>()
         {
-            RootPath = Path.Combine(Directory.GetCurrentDirectory(), project.ProjectName)
+            new CleanArchitectureRenderer(),
+            new ServerlessRenderer(),
+            new NLayerRenderer(),
         };
 
-        var template = project.Architecture switch
+        _templates = _renderers.Select(t => new GenericTemplate(t, new List<IPackageInstaller>
         {
-            ArchitectureType.CleanArchitecture => new CleanArchitecture(),
-            ArchitectureType.NLayer => throw new NotSupportedException("NLayer was not supported yet"),
-            ArchitectureType.Serverless => throw new NotSupportedException("Serverless was not supported yet"),
-            _ => throw new NotSupportedException("Selected template is not supported.")
-        };
+            new SqlServerInstaller(),   // database
+            new PostgreSqlInstaller(),
+            new MySqlInstaller(),
+            new SqliteInstaller(),
+            new MongoDbInstaller(),
+            new RedisCacheInstaller(),  // cache
+            new InMemoryCacheInstaller(),
+            new JwtInstaller(),         // auth
+            new Auth0Installer(),
+            new DuendeIdentityInstaller(),
+            new SendGridInstaller(),    // email
+            new MailgunInstaller(),
+            new TwilioInstaller(),      // sms
+            new WavecellInstaller(),
+            new StripeInstaller(),      // payments
+            new PaypalInstaller(),
+            new AzureBlobInstaller(),   // storage
+            new AwsS3BucketInstaller(),
+            new RabbitMqInstaller(),    // messaging
+            new KafkaInstaller(),
+            new ServiceBusInstaller(),
+        }))
+        .ToList();
+    }
 
-        template.Generate(project, context);
+    public void Run(ProjectConfiguration configuration)
+    {
+        var renderer = _renderers.FirstOrDefault(t => t.Architecture == configuration.Architecture);
+        if (renderer == null)
+            throw new InvalidOperationException($"Renderer for {configuration.Architecture} not found");
 
-        AppConsole.WriteLine($"[green] Project {project.ProjectName} generated successfully![/]", includeIndicator: false);
+        var context = new TemplateContext(configuration, renderer);
+
+        var template = _templates.FirstOrDefault(t => t.Architecture == configuration.Architecture);
+        if (template == null)
+            throw new FileNotFoundException($"Template '{configuration.Architecture}' not found");
+
+        template.Generate(configuration, context);
     }
 }

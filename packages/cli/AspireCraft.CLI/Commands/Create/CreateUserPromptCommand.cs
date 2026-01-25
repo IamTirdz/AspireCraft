@@ -15,8 +15,14 @@ public sealed class CreateUserPromptCommand
         var projectName = AppConsole.Prompt("Project name");
         var architecture = AppConsole.SelectionPrompt("Architecture type", Enum.GetValues(typeof(ArchitectureType)).ToEnumList());
         var framework = AppConsole.SelectionPrompt("Framework", Enum.GetValues(typeof(NetFramework)).ToEnumList());
-        var useControllers = AppConsole.Prompt("Use controllers?", true);
-        var authentication = AppConsole.SelectionPrompt("Authentication type", Enum.GetValues(typeof(AuthenticationType)).ToEnumList());
+
+        bool? useControllers = null;
+        string? authentication = null;
+        if (architecture != ArchitectureType.Serverless.ToString())
+        {
+            useControllers = AppConsole.Prompt("Use controllers?", true);
+            authentication = AppConsole.SelectionPrompt("Authentication type", Enum.GetValues(typeof(AuthenticationType)).ToEnumList());
+        }
 
         var dbContextName = AppConsole.Prompt("DbContext name:");
         var dbProvider = AppConsole.SelectionPrompt("Database Provider", Enum.GetValues(typeof(DatabaseProvider)).ToEnumList());
@@ -80,18 +86,20 @@ public sealed class CreateUserPromptCommand
         if (!paymentIntegration.Contains(AppConstant.NoneOption))
             selectedIntegrations.AddRange(paymentIntegration.Select(p => p.FromEnumValue<IntegrationType>()));
 
-        var includeUnitTest = AppConsole.Prompt("Include Unit Tests?", false);
-        var includeIntegrationTest = AppConsole.Prompt("Include Integration Tests?", false);
-        var includeArchitectureTest = AppConsole.Prompt("Include Architecture Tests?", false);
+        var includeUnitTest = AppConsole.Prompt("Include Unit tests?", false);
+        var includeIntegrationTest = AppConsole.Prompt("Include Integration tests?", false);
+        var includeArchitectureTest = AppConsole.Prompt("Include Architecture tests?", false);
 
         var solutionName = projectName.Replace(" ", string.Empty);
         return new ProjectConfiguration
         {
             ProjectName = solutionName,
             Architecture = architecture.FromEnumValue<ArchitectureType>(),
-            Framework = framework,
-            Authentication = authentication.FromEnumValue<AuthenticationType>(),
-            UseControllers = useControllers,
+            Framework = framework.FromEnumValue<NetFramework>(),
+            Authentication = !string.IsNullOrEmpty(authentication)
+                ? authentication.FromEnumValue<AuthenticationType>()
+                : null,
+            UseControllers = useControllers.HasValue && useControllers.Value,
             DbContextName = dbContextName,
             Database = dbProvider.FromEnumValue<DatabaseProvider>(),
             UseNetAspire = useNetAspire,

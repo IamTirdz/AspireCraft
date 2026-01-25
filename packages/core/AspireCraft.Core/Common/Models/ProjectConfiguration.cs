@@ -1,4 +1,5 @@
-﻿using AspireCraft.Core.Common.Enums;
+﻿using AspireCraft.Core.Common.Constants;
+using AspireCraft.Core.Common.Enums;
 
 namespace AspireCraft.Core.Common.Models;
 
@@ -6,10 +7,10 @@ public sealed class ProjectConfiguration
 {
     public string ProjectName { get; set; } = string.Empty;
     public ArchitectureType Architecture { get; set; }
-    public string Framework { get; set; } = string.Empty;
-    public AuthenticationType Authentication { get; set; }
-    public bool UseControllers { get; set; } // web api | minimal api
-    public string DbContextName { get; set; } = string.Empty;
+    public NetFramework Framework { get; set; } = NetFramework.Net8;
+    public AuthenticationType? Authentication { get; set; }
+    public bool? UseControllers { get; set; } // web api | minimal api
+    public string DbContextName { get; set; } = AppConstant.DbContextName;
     public DatabaseProvider Database { get; set; }
 
     public bool UseNetAspire { get; set; }
