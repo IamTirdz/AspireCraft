@@ -26,7 +26,7 @@ public static class AppConsole
 
     public static string Prompt(string text)
     {
-        AnsiConsole.WriteLine();
+        WriteLine();
         AnsiConsole.MarkupLine($"[{PrimaryColor}]◇[/][{TextColor}] {Markup.Escape(text)}[/]");
 
         var result = AnsiConsole.Prompt(
@@ -39,7 +39,7 @@ public static class AppConsole
 
     public static bool Prompt(string text, bool? defaultValue)
     {
-        AnsiConsole.WriteLine();
+        WriteLine();
         AnsiConsole.MarkupLine($"[{PrimaryColor}]◇[/][{TextColor}] {Markup.Escape(text)}[/]");
 
         var options = defaultValue.HasValue
@@ -59,7 +59,7 @@ public static class AppConsole
 
     public static string SelectionPrompt(string text, IEnumerable<string> choices)
     {
-        AnsiConsole.WriteLine();
+        WriteLine();
         AnsiConsole.MarkupLine($"[{PrimaryColor}]◇[/][{TextColor}] {Markup.Escape(text)}[/]");
 
         var choiceList = choices.ToList();

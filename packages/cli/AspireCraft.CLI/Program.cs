@@ -20,4 +20,4 @@ app.Configure(config =>
         .WithDescription("Create new project");
 });
 
-return await app.RunAsync(args);
+await app.RunAsync(args);

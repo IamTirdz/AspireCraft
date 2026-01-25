@@ -25,6 +25,23 @@ public static class EnumExtension
             .Select(e => e.ToEnumValue())
             .ToArray();
     }
+
+    public static T FromEnumValue<T>(this string displayName) where T : Enum
+    {
+        foreach (var field in typeof(T).GetFields(BindingFlags.Public | BindingFlags.Static))
+        {
+            var attr = field.GetCustomAttribute<DisplayNameAttribute>();
+            if (attr?.Name == displayName)
+                return (T)field.GetValue(null)!;
+
+            // fallback to formatted enum name
+            var formatted = ((Enum)field.GetValue(null)!).ToEnumValue();
+            if (formatted == displayName)
+                return (T)field.GetValue(null)!;
+        }
+
+        throw new ArgumentException($"'{displayName}' is not a valid value of {typeof(T).Name}");
+    }
 }
 
 [AttributeUsage(AttributeTargets.Field)]

@@ -1,4 +1,5 @@
 ﻿using AspireCraft.Core.Base;
+using AspireCraft.Core.Common.Constants;
 using AspireCraft.Core.Common.Enums;
 using AspireCraft.Core.Common.Extensions;
 using AspireCraft.Core.Common.Models;
@@ -29,43 +30,55 @@ public sealed class CreateUserPromptCommand
             .Where(i => i == IntegrationType.SendGrid || i == IntegrationType.Mailgun)
             .Select(i => i.ToEnumValue())
             .ToList();
+        emailIntegrations.Insert(0, AppConstant.NoneOption);
         var emailIntegration = AppConsole.MultiSelectionPrompt("Email", emailIntegrations);
-        selectedIntegrations.AddRange(emailIntegration.Select(name => Enum.Parse<IntegrationType>(name)));
+        if (!emailIntegration.Contains(AppConstant.NoneOption))
+            selectedIntegrations.AddRange(emailIntegration.Select(e => e.FromEnumValue<IntegrationType>()));
 
         var smsIntegrations = availableIntegrations
             .Where(i => i == IntegrationType.Wavecell || i == IntegrationType.Twilio)
             .Select(i => i.ToEnumValue())
             .ToList();
+        smsIntegrations.Insert(0, AppConstant.NoneOption);
         var smsIntegration = AppConsole.MultiSelectionPrompt("SMS", smsIntegrations);
-        selectedIntegrations.AddRange(smsIntegration.Select(name => Enum.Parse<IntegrationType>(name)));
+        if (!smsIntegration.Contains(AppConstant.NoneOption))
+            selectedIntegrations.AddRange(smsIntegration.Select(s => s.FromEnumValue<IntegrationType>()));
 
         var storageIntegrations = availableIntegrations
             .Where(i => i == IntegrationType.AzureBlob || i == IntegrationType.AwsS3Bucket)
             .Select(i => i.ToEnumValue())
             .ToList();
+        storageIntegrations.Insert(0, AppConstant.NoneOption);
         var storageIntegration = AppConsole.MultiSelectionPrompt("Storage", storageIntegrations);
-        selectedIntegrations.AddRange(storageIntegration.Select(name => Enum.Parse<IntegrationType>(name)));
+        if (!storageIntegration.Contains(AppConstant.NoneOption))
+            selectedIntegrations.AddRange(storageIntegration.Select(s => s.FromEnumValue<IntegrationType>()));
 
         var messagingIntegrations = availableIntegrations
             .Where(i => i == IntegrationType.RabbitMQ || i == IntegrationType.Kafka || i == IntegrationType.ServiceBus)
             .Select(i => i.ToEnumValue())
             .ToList();
+        messagingIntegrations.Insert(0, AppConstant.NoneOption);
         var messagingIntegration = AppConsole.MultiSelectionPrompt("Messaging", messagingIntegrations);
-        selectedIntegrations.AddRange(messagingIntegration.Select(name => Enum.Parse<IntegrationType>(name)));
+        if (!messagingIntegration.Contains(AppConstant.NoneOption))
+            selectedIntegrations.AddRange(messagingIntegration.Select(m => m.FromEnumValue<IntegrationType>()));
 
         var cacheIntegrations = availableIntegrations
             .Where(i => i == IntegrationType.Redis || i == IntegrationType.InMemory)
             .Select(i => i.ToEnumValue())
             .ToList();
+        cacheIntegrations.Insert(0, AppConstant.NoneOption);
         var cacheIntegration = AppConsole.MultiSelectionPrompt("Caching", cacheIntegrations);
-        selectedIntegrations.AddRange(cacheIntegration.Select(name => Enum.Parse<IntegrationType>(name)));
+        if (!cacheIntegration.Contains(AppConstant.NoneOption))
+            selectedIntegrations.AddRange(cacheIntegration.Select(c => c.FromEnumValue<IntegrationType>()));
 
         var paymentIntegrations = availableIntegrations
             .Where(i => i == IntegrationType.Paypal || i == IntegrationType.Stripe)
             .Select(i => i.ToEnumValue())
             .ToList();
+        paymentIntegrations.Insert(0, AppConstant.NoneOption);
         var paymentIntegration = AppConsole.MultiSelectionPrompt("Payment", paymentIntegrations);
-        selectedIntegrations.AddRange(paymentIntegration.Select(name => Enum.Parse<IntegrationType>(name)));
+        if (!paymentIntegration.Contains(AppConstant.NoneOption))
+            selectedIntegrations.AddRange(paymentIntegration.Select(p => p.FromEnumValue<IntegrationType>()));
 
         var includeUnitTest = AppConsole.Prompt("Include Unit Tests?", false);
         var includeIntegrationTest = AppConsole.Prompt("Include Integration Tests?", false);
@@ -75,12 +88,12 @@ public sealed class CreateUserPromptCommand
         return new ProjectConfiguration
         {
             ProjectName = solutionName,
-            Architecture = (ArchitectureType)Enum.Parse(typeof(ArchitectureType), architecture),
+            Architecture = architecture.FromEnumValue<ArchitectureType>(),
             Framework = framework,
-            Authentication = (AuthenticationType)Enum.Parse(typeof(AuthenticationType), authentication),
+            Authentication = authentication.FromEnumValue<AuthenticationType>(),
             UseControllers = useControllers,
             DbContextName = dbContextName,
-            Database = (DatabaseProvider)Enum.Parse(typeof(DatabaseProvider), dbProvider),
+            Database = dbProvider.FromEnumValue<DatabaseProvider>(),
             UseNetAspire = useNetAspire,
             Integrations = selectedIntegrations,
             IncludeUnitTests = includeUnitTest,
