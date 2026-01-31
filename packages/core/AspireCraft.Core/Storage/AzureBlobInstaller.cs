@@ -16,10 +16,14 @@ public sealed class AzureBlobInstaller : IPackageInstaller
     public void Install(ProjectConfiguration configuration, TemplateContext context)
     {
         var directory = context.Renderer.GetFolderPath(AppLayerConstant.Services);
-        var template = Path.Combine("templates", $"{configuration.Architecture}", directory, "Storage", "AzureBlobService.cs.txt");
-        var output = Path.Combine(context.TargetDirectory, "src", directory, "Storage", "AzureBlobService.cs");
+
+        var projectDir = Path.Combine(context.TargetDirectory, "src", $"{context.ProjectName}.Infrastructure");
+        var storageDir = Path.Combine(projectDir, directory, "Storage");
+
+        var template = Path.Combine("Integrations", "Storage", "AzureBlobService.cs.tpl");
+        var output = Path.Combine(storageDir, "AzureBlobService.cs");
 
         context.Render(template, output);
-        context.AddPackage("Azure.Storage.Blobs");
+        context.AddPackage("Azure.Storage.Blobs", projectDir);
     }
 }

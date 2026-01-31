@@ -37,13 +37,16 @@ public sealed class NLayerRenderer : IProjectRenderer
 
     public string GetFolderPath(string path)
     {
-        return path switch
+        var directory = path switch
         {
             AppLayerConstant.DbContext => "Data",
             AppLayerConstant.Repositories => "Data/Repositories",
             AppLayerConstant.Services => "Data/Services",
             _ => throw new NotSupportedException($"Layer {path} not defined for NLayer")
         };
+
+        return directory.Replace('/', Path.DirectorySeparatorChar)
+            .Replace('\\', Path.DirectorySeparatorChar);
     }
 
     private static void CreateSolution(TemplateContext context, string rootDir)
@@ -81,5 +84,10 @@ public sealed class NLayerRenderer : IProjectRenderer
         }
 
         context.RunDotNet("restore", context.TargetDirectory);
+    }
+
+    private static void AddNuGetPackage(TemplateContext context, string projectPath, string packageName, string? version = null)
+    {
+        context.AddPackage(packageName, projectPath, version);
     }
 }

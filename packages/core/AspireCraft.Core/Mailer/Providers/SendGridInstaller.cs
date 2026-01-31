@@ -16,10 +16,14 @@ public sealed class SendGridInstaller : IPackageInstaller
     public void Install(ProjectConfiguration configuration, TemplateContext context)
     {
         var directory = context.Renderer.GetFolderPath(AppLayerConstant.Services);
-        var template = Path.Combine("templates", $"{configuration.Architecture}", directory, "Email", "SendGridService.cs.txt");
-        var output = Path.Combine(context.TargetDirectory, "src", directory, "Email", "SendGridService.cs");
+
+        var projectDir = Path.Combine(context.TargetDirectory, "src", $"{context.ProjectName}.Infrastructure");
+        var emailDir = Path.Combine(projectDir, directory, "Email");
+
+        var template = Path.Combine("Integrations", "Email", "SendGridService.cs.tpl");
+        var output = Path.Combine(emailDir, "SendGridService.cs");
 
         context.Render(template, output);
-        context.AddPackage("SendGrid");
+        context.AddPackage("SendGrid", projectDir);
     }
 }

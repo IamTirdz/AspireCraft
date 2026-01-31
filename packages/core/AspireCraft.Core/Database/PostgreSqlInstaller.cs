@@ -15,11 +15,15 @@ public sealed class PostgreSqlInstaller : IPackageInstaller
 
     public void Install(ProjectConfiguration configuration, TemplateContext context)
     {
-        var directory = context.Renderer.GetFolderPath(AppLayerConstant.DbContext);
-        var template = Path.Combine("templates", $"{configuration.Architecture}", directory, "DbContext.cs.txt");
-        var output = Path.Combine(context.TargetDirectory, "src", directory, "DbContext.cs");
+        var directory = context.Renderer.GetFolderPath(AppLayerConstant.Services);
+
+        var projectDir = Path.Combine(context.TargetDirectory, "src", $"{context.ProjectName}.Infrastructure");
+        var contextDir = Path.Combine(projectDir, directory);
+
+        var template = Path.Combine("Integrations", "Database", "PostgresDbContext.cs.tpl");
+        var output = Path.Combine(contextDir, $"{context.Configuration.DbContextName}.cs");
 
         context.Render(template, output);
-        context.AddPackage("Npgsql.EntityFrameworkCore.PostgreSQL");
+        context.AddPackage("Npgsql.EntityFrameworkCore.PostgreSQL", projectDir);
     }
 }

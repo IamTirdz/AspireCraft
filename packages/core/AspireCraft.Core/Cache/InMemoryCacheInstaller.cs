@@ -16,8 +16,12 @@ public sealed class InMemoryCacheInstaller : IPackageInstaller
     public void Install(ProjectConfiguration configuration, TemplateContext context)
     {
         var directory = context.Renderer.GetFolderPath(AppLayerConstant.Services);
-        var template = Path.Combine("templates", $"{configuration.Architecture}", directory, "Cache", "InMemoryCacheService.cs.txt");
-        var output = Path.Combine(context.TargetDirectory, "src", directory, "Cache", "InMemoryCacheService.cs");
+
+        var projectDir = Path.Combine(context.TargetDirectory, "src", $"{context.ProjectName}.Infrastructure");
+        var cacheDir = Path.Combine(projectDir, directory, "Cache");
+
+        var template = Path.Combine("Integrations", "Cache", "InMemoryCacheService.cs.tpl");
+        var output = Path.Combine(cacheDir, "InMemoryCacheService.cs");
 
         context.Render(template, output);
     }

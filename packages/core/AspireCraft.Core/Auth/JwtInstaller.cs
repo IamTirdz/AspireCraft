@@ -16,10 +16,14 @@ public sealed class JwtInstaller : IPackageInstaller
     public void Install(ProjectConfiguration configuration, TemplateContext context)
     {
         var directory = context.Renderer.GetFolderPath(AppLayerConstant.Services);
-        var template = Path.Combine("templates", $"{configuration.Architecture}", directory, "Auth", "JwtService.cs.txt");
-        var output = Path.Combine(context.TargetDirectory, "src", directory, "Auth", "JwtService.cs");
+
+        var projectDir = Path.Combine(context.TargetDirectory, "src", $"{context.ProjectName}.Infrastructure");
+        var authDir = Path.Combine(projectDir, directory, "Auth");
+
+        var template = Path.Combine("Integrations", "Auth", "JwtService.cs.tpl");
+        var output = Path.Combine(authDir, "JwtService.cs");
 
         context.Render(template, output);
-        context.AddPackage("Microsoft.AspNetCore.Authentication.JwtBearer");
+        context.AddPackage("Microsoft.AspNetCore.Authentication.JwtBearer", projectDir);
     }
 }

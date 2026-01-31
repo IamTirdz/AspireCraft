@@ -16,10 +16,14 @@ public sealed class ServiceBusInstaller : IPackageInstaller
     public void Install(ProjectConfiguration configuration, TemplateContext context)
     {
         var directory = context.Renderer.GetFolderPath(AppLayerConstant.Services);
-        var template = Path.Combine("templates", $"{configuration.Architecture}", directory, "Messaging", "AzureMessagingBusService.cs.txt");
-        var output = Path.Combine(context.TargetDirectory, "src", directory, "Messaging", "AzureMessagingBusService.cs");
+
+        var projectDir = Path.Combine(context.TargetDirectory, "src", $"{context.ProjectName}.Infrastructure");
+        var messagingDir = Path.Combine(projectDir, directory, "Messaging");
+
+        var template = Path.Combine("Integrations", "Messaging", "AzureMessagingBusService.cs.tpl");
+        var output = Path.Combine(messagingDir, "AzureMessagingBusService.cs");
 
         context.Render(template, output);
-        context.AddPackage("Azure.Messaging.ServiceBus");
+        context.AddPackage("Azure.Messaging.ServiceBus", projectDir);
     }
 }

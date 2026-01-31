@@ -16,10 +16,14 @@ public sealed class StripeInstaller : IPackageInstaller
     public void Install(ProjectConfiguration configuration, TemplateContext context)
     {
         var directory = context.Renderer.GetFolderPath(AppLayerConstant.Services);
-        var template = Path.Combine("templates", $"{configuration.Architecture}", directory, "Payments", "StripeService.cs.txt");
-        var output = Path.Combine(context.TargetDirectory, "src", directory, "Payments", "StripeService.cs");
+
+        var projectDir = Path.Combine(context.TargetDirectory, "src", $"{context.ProjectName}.Infrastructure");
+        var paymentDir = Path.Combine(projectDir, directory, "Payments");
+
+        var template = Path.Combine("Integrations", "Payments", "StripeService.cs.tpl");
+        var output = Path.Combine(paymentDir, "StripeService.cs");
 
         context.Render(template, output);
-        context.AddPackage("Stripe.net");
+        context.AddPackage("Stripe.net", projectDir);
     }
 }

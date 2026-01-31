@@ -16,10 +16,14 @@ public sealed class TwilioInstaller : IPackageInstaller
     public void Install(ProjectConfiguration configuration, TemplateContext context)
     {
         var directory = context.Renderer.GetFolderPath(AppLayerConstant.Services);
-        var template = Path.Combine("templates", $"{configuration.Architecture}", directory, "SMS", "TwilioService.cs.txt");
-        var output = Path.Combine(context.TargetDirectory, "src", directory, "SMS", "TwilioService.cs");
+
+        var projectDir = Path.Combine(context.TargetDirectory, "src", $"{context.ProjectName}.Infrastructure");
+        var smsDir = Path.Combine(projectDir, directory, "SMS");
+
+        var template = Path.Combine("Integrations", "SMS", "TwilioService.cs.tple");
+        var output = Path.Combine(smsDir, "TwilioService.cs");
 
         context.Render(template, output);
-        context.AddPackage("Twilio");
+        context.AddPackage("Twilio", projectDir);
     }
 }

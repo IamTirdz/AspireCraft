@@ -16,10 +16,14 @@ public sealed class RedisCacheInstaller : IPackageInstaller
     public void Install(ProjectConfiguration configuration, TemplateContext context)
     {
         var directory = context.Renderer.GetFolderPath(AppLayerConstant.Services);
-        var template = Path.Combine("templates", $"{configuration.Architecture}", directory, "Cache", "RedisCacheService.cs.txt");
-        var output = Path.Combine(context.TargetDirectory, "src", directory, "Cache", "RedisCacheService.cs");
+
+        var projectDir = Path.Combine(context.TargetDirectory, "src", $"{context.ProjectName}.Infrastructure");
+        var cacheDir = Path.Combine(projectDir, directory, "Cache");
+
+        var template = Path.Combine("Integrations", "Cache", "RedisCacheService.cs.tpl");
+        var output = Path.Combine(cacheDir, "RedisCacheService.cs");
 
         context.Render(template, output);
-        context.AddPackage("StackExchange.Redis");
+        context.AddPackage("StackExchange.Redis", projectDir);
     }
 }

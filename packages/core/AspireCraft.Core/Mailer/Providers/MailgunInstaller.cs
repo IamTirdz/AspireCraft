@@ -16,10 +16,14 @@ public sealed class MailgunInstaller : IPackageInstaller
     public void Install(ProjectConfiguration configuration, TemplateContext context)
     {
         var directory = context.Renderer.GetFolderPath(AppLayerConstant.Services);
-        var template = Path.Combine("templates", $"{configuration.Architecture}", directory, "Email", "MailgunService.cs.txt");
-        var output = Path.Combine(context.TargetDirectory, "src", directory, "Email", "MailgunService.cs");
+
+        var projectDir = Path.Combine(context.TargetDirectory, "src", $"{context.ProjectName}.Infrastructure");
+        var emailDir = Path.Combine(projectDir, directory, "Email");
+
+        var template = Path.Combine("Integrations", "Email", "MailgunService.cs.tpl");
+        var output = Path.Combine(emailDir, "MailgunService.cs");
 
         context.Render(template, output);
-        context.AddPackage("MailgunSharp");
+        context.AddPackage("MailgunSharp", projectDir);
     }
 }

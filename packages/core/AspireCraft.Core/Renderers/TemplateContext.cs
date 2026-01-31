@@ -60,7 +60,7 @@ public sealed class TemplateContext
         File.WriteAllText(outputPath, content);
     }
 
-    public void AddPackage(string packageName, string? projectPath = null, string? version = null)
+    public void AddPackage(string packageName, string projectPath, string? version = null)
     {
         if (string.IsNullOrWhiteSpace(projectPath))
             throw new ArgumentNullException(nameof(projectPath), "Project path cannot be null or empty");

@@ -16,10 +16,14 @@ public class DuendeIdentityInstaller : IPackageInstaller
     public void Install(ProjectConfiguration configuration, TemplateContext context)
     {
         var directory = context.Renderer.GetFolderPath(AppLayerConstant.Services);
-        var template = Path.Combine("templates", $"{configuration.Architecture}", directory, "DuendeIdentityService.cs.txt");
-        var output = Path.Combine(context.TargetDirectory, "src", directory, "DuendeIdentityService.cs");
+
+        var projectDir = Path.Combine(context.TargetDirectory, "src", $"{context.ProjectName}.Infrastructure");
+        var authDir = Path.Combine(projectDir, directory, "Auth");
+
+        var template = Path.Combine("Integrations", "Auth", "DuendeIdentityService.cs.tpl");
+        var output = Path.Combine(authDir, "DuendeIdentityService.cs");
 
         context.Render(template, output);
-        context.AddPackage("Duende.IdentityServer");
+        context.AddPackage("Duende.IdentityServer", projectDir);
     }
 }

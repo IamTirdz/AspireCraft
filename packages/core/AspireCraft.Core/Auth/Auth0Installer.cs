@@ -16,10 +16,14 @@ public sealed class Auth0Installer : IPackageInstaller
     public void Install(ProjectConfiguration configuration, TemplateContext context)
     {
         var directory = context.Renderer.GetFolderPath(AppLayerConstant.Services);
-        var template = Path.Combine("templates", $"{configuration.Architecture}", directory, "Auth", "Auth0Service.cs.txt");
-        var output = Path.Combine(context.TargetDirectory, "src", directory, "Auth", "Auth0Service.cs");
+
+        var projectDir = Path.Combine(context.TargetDirectory, "src", $"{context.ProjectName}.Infrastructure");
+        var authDir = Path.Combine(projectDir, directory, "Auth");
+
+        var template = Path.Combine("Integrations", "Auth", "Auth0Service.cs.tpl");
+        var output = Path.Combine(authDir, "Auth0Service.cs");
 
         context.Render(template, output);
-        context.AddPackage("Auth0.AspNetCore.Authentication");
+        context.AddPackage("Auth0.AspNetCore.Authentication", projectDir);
     }
 }

@@ -37,13 +37,16 @@ public sealed class ServerlessRenderer : IProjectRenderer
 
     public string GetFolderPath(string path)
     {
-        return path switch
+        var directory = path switch
         {
             AppLayerConstant.DbContext => "Infrastructure/Persistence",
             AppLayerConstant.Repositories => "Infrastructure/Repositories",
             AppLayerConstant.Services => "Infrastructure/Services",
             _ => throw new NotSupportedException($"Layer {path} not defined for Serverless")
         };
+
+        return directory.Replace('/', Path.DirectorySeparatorChar)
+            .Replace('\\', Path.DirectorySeparatorChar);
     }
 
     private static void CreateSolution(TemplateContext context, string rootDir)
@@ -89,5 +92,10 @@ public sealed class ServerlessRenderer : IProjectRenderer
         }
 
         context.RunDotNet("restore", context.TargetDirectory);
+    }
+
+    private static void AddNuGetPackage(TemplateContext context, string projectPath, string packageName, string? version = null)
+    {
+        context.AddPackage(packageName, projectPath, version);
     }
 }
