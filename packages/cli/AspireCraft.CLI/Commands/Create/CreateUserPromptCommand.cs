@@ -1,5 +1,4 @@
 ﻿using AspireCraft.Core.Base;
-using AspireCraft.Core.Common.Constants;
 using AspireCraft.Core.Common.Enums;
 using AspireCraft.Core.Common.Extensions;
 using AspireCraft.Core.Common.Models;
@@ -10,98 +9,74 @@ public sealed class CreateUserPromptCommand
 {
     public ProjectConfiguration PromptUser()
     {
-        AppConsole.WriteLine("[yellow]Let's get started[/]", isStart: true);
-
-        var projectName = AppConsole.Prompt("Project name");
-        var architecture = AppConsole.SelectionPrompt("Architecture type", Enum.GetValues(typeof(ArchitectureType)).ToEnumList());
-        var framework = AppConsole.SelectionPrompt("Framework", Enum.GetValues(typeof(NetFramework)).ToEnumList());
+        // Project Info
+        var projectName = Prompt.Ask("Project name:");
+        var architecture = Prompt.Select<ArchitectureType>("Architecture type:");
+        var framework = Prompt.Select<NetFramework>(".NET Framework:");
 
         bool? useControllers = null;
-        string? authentication = null;
-        if (architecture != ArchitectureType.Serverless.ToString())
+        AuthenticationType? authentication = null;
+        if (architecture != ArchitectureType.Serverless)
         {
-            useControllers = AppConsole.Prompt("Use controllers?", true);
-            authentication = AppConsole.SelectionPrompt("Authentication type", Enum.GetValues(typeof(AuthenticationType)).ToEnumList());
+            useControllers = Prompt.Confirm("Use controllers?", true);
+            authentication = Prompt.Select<AuthenticationType>("Authentication type:");
         }
 
-        var dbContextName = AppConsole.Prompt("DbContext name:");
-        var dbProvider = AppConsole.SelectionPrompt("Database Provider", Enum.GetValues(typeof(DatabaseProvider)).ToEnumList());
+        var dbContextName = Prompt.Ask("DbContext name:");
+        var dbProvider = Prompt.Select<DatabaseProvider>("Database Provider:");
 
-        var useNetAspire = AppConsole.Prompt("Use .NET aspire orchestration?", false);
+        // Orchestration
+        var useNetAspire = Prompt.Confirm("Use .NET aspire orchestration?", false);
+
         var availableIntegrations = IntegrationCatalog.GetAvailableIntegrations(useNetAspire);
-
         var selectedIntegrations = new List<IntegrationType>();
 
-        var emailIntegrations = availableIntegrations
-            .Where(i => i == IntegrationType.SendGrid || i == IntegrationType.Mailgun)
-            .Select(i => i.ToEnumValue())
-            .ToList();
-        emailIntegrations.Insert(0, AppConstant.NoneOption);
-        var emailIntegration = AppConsole.MultiSelectionPrompt("Email", emailIntegrations);
-        if (!emailIntegration.Contains(AppConstant.NoneOption))
-            selectedIntegrations.AddRange(emailIntegration.Select(e => e.FromEnumValue<IntegrationType>()));
+        // Integrations
+        var emailIntegrations = availableIntegrations.AddIntegrations(new[] { IntegrationType.SendGrid, IntegrationType.Mailgun });
+        var emailIntegration = Prompt.MultiSelect("Email", emailIntegrations, includeNone: true);
+        if (emailIntegration != null)
+            selectedIntegrations.AddRange(emailIntegration);
 
-        var smsIntegrations = availableIntegrations
-            .Where(i => i == IntegrationType.Wavecell || i == IntegrationType.Twilio)
-            .Select(i => i.ToEnumValue())
-            .ToList();
-        smsIntegrations.Insert(0, AppConstant.NoneOption);
-        var smsIntegration = AppConsole.MultiSelectionPrompt("SMS", smsIntegrations);
-        if (!smsIntegration.Contains(AppConstant.NoneOption))
-            selectedIntegrations.AddRange(smsIntegration.Select(s => s.FromEnumValue<IntegrationType>()));
+        var smsIntegrations = availableIntegrations.AddIntegrations(new[] { IntegrationType.Wavecell, IntegrationType.Twilio });
+        var smsIntegration = Prompt.MultiSelect("SMS", smsIntegrations, includeNone: true);
+        if (smsIntegration != null)
+            selectedIntegrations.AddRange(smsIntegration);
 
-        var storageIntegrations = availableIntegrations
-            .Where(i => i == IntegrationType.AzureBlob || i == IntegrationType.AwsS3Bucket)
-            .Select(i => i.ToEnumValue())
-            .ToList();
-        storageIntegrations.Insert(0, AppConstant.NoneOption);
-        var storageIntegration = AppConsole.MultiSelectionPrompt("Storage", storageIntegrations);
-        if (!storageIntegration.Contains(AppConstant.NoneOption))
-            selectedIntegrations.AddRange(storageIntegration.Select(s => s.FromEnumValue<IntegrationType>()));
+        var storageIntegrations = availableIntegrations.AddIntegrations(new[] { IntegrationType.AzureBlob, IntegrationType.AwsS3Bucket });
+        var storageIntegration = Prompt.MultiSelect("Storage", storageIntegrations, includeNone: true);
+        if (storageIntegration != null)
+            selectedIntegrations.AddRange(storageIntegration);
 
-        var messagingIntegrations = availableIntegrations
-            .Where(i => i == IntegrationType.RabbitMQ || i == IntegrationType.Kafka || i == IntegrationType.ServiceBus)
-            .Select(i => i.ToEnumValue())
-            .ToList();
-        messagingIntegrations.Insert(0, AppConstant.NoneOption);
-        var messagingIntegration = AppConsole.MultiSelectionPrompt("Messaging", messagingIntegrations);
-        if (!messagingIntegration.Contains(AppConstant.NoneOption))
-            selectedIntegrations.AddRange(messagingIntegration.Select(m => m.FromEnumValue<IntegrationType>()));
+        var messagingIntegrations = availableIntegrations.AddIntegrations(new[] { IntegrationType.RabbitMQ, IntegrationType.Kafka, IntegrationType.ServiceBus });
+        var messagingIntegration = Prompt.MultiSelect("Messaging", messagingIntegrations, includeNone: true);
+        if (messagingIntegration != null)
+            selectedIntegrations.AddRange(messagingIntegration);
 
-        var cacheIntegrations = availableIntegrations
-            .Where(i => i == IntegrationType.Redis || i == IntegrationType.InMemory)
-            .Select(i => i.ToEnumValue())
-            .ToList();
-        cacheIntegrations.Insert(0, AppConstant.NoneOption);
-        var cacheIntegration = AppConsole.MultiSelectionPrompt("Caching", cacheIntegrations);
-        if (!cacheIntegration.Contains(AppConstant.NoneOption))
-            selectedIntegrations.AddRange(cacheIntegration.Select(c => c.FromEnumValue<IntegrationType>()));
+        var cacheIntegrations = availableIntegrations.AddIntegrations(new[] { IntegrationType.Redis, IntegrationType.InMemory });
+        var cacheIntegration = Prompt.MultiSelect("Caching", cacheIntegrations, includeNone: true);
+        if (cacheIntegration != null)
+            selectedIntegrations.AddRange(cacheIntegration);
 
-        var paymentIntegrations = availableIntegrations
-            .Where(i => i == IntegrationType.Paypal || i == IntegrationType.Stripe)
-            .Select(i => i.ToEnumValue())
-            .ToList();
-        paymentIntegrations.Insert(0, AppConstant.NoneOption);
-        var paymentIntegration = AppConsole.MultiSelectionPrompt("Payment", paymentIntegrations);
-        if (!paymentIntegration.Contains(AppConstant.NoneOption))
-            selectedIntegrations.AddRange(paymentIntegration.Select(p => p.FromEnumValue<IntegrationType>()));
+        var paymentIntegrations = availableIntegrations.AddIntegrations(new[] { IntegrationType.Paypal, IntegrationType.Stripe });
+        var paymentIntegration = Prompt.MultiSelect("Payment", paymentIntegrations, includeNone: true);
+        if (paymentIntegration != null)
+            selectedIntegrations.AddRange(paymentIntegration);
 
-        var includeUnitTest = AppConsole.Prompt("Include Unit tests?", false);
-        var includeIntegrationTest = AppConsole.Prompt("Include Integration tests?", false);
-        var includeArchitectureTest = AppConsole.Prompt("Include Architecture tests?", false);
+        // Test options
+        var includeUnitTest = Prompt.Confirm("Include Unit tests?", false);
+        var includeIntegrationTest = Prompt.Confirm("Include Integration tests?", false);
+        var includeArchitectureTest = Prompt.Confirm("Include Architecture tests?", false);
 
         var solutionName = projectName.Replace(" ", string.Empty);
         return new ProjectConfiguration
         {
             ProjectName = solutionName,
-            Architecture = architecture.FromEnumValue<ArchitectureType>(),
-            Framework = framework.FromEnumValue<NetFramework>(),
-            Authentication = !string.IsNullOrEmpty(authentication)
-                ? authentication.FromEnumValue<AuthenticationType>()
-                : null,
+            Architecture = architecture,
+            Framework = framework,
+            Authentication = authentication,
             UseControllers = useControllers.HasValue && useControllers.Value,
             DbContextName = dbContextName,
-            Database = dbProvider.FromEnumValue<DatabaseProvider>(),
+            Database = dbProvider,
             UseNetAspire = useNetAspire,
             Integrations = selectedIntegrations,
             IncludeUnitTests = includeUnitTest,

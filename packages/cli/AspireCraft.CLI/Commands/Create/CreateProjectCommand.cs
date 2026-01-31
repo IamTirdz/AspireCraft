@@ -9,6 +9,8 @@ public sealed class CreateProjectCommand : Command
 {
     public override int Execute(CommandContext context, CancellationToken cancellationToken)
     {
+        AppConsole.WriteLine("[yellow]Let's get started[/]", isStart: true);
+
         var command = new CreateUserPromptCommand();
         var config = command.PromptUser();
 
