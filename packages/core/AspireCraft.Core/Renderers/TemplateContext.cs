@@ -13,7 +13,7 @@ public sealed class TemplateContext
     public string TargetDirectory { get; }
     public ArchitectureType Architecture { get; }
     public NetFramework Framework { get; }
-    public IReadOnlySet<IntegrationType> Integrations { get; }
+    public IReadOnlyCollection<IntegrationType> Integrations { get; }
     public IDictionary<string, string> Tokens { get; }
     public IProjectRenderer Renderer { get; }
 
@@ -38,25 +38,45 @@ public sealed class TemplateContext
 
     public void Render(string templatePath, string outputPath)
     {
-        templatePath = templatePath.Replace('/', Path.DirectorySeparatorChar);
+        var fullPath = Path.IsPathRooted(templatePath)
+            ? templatePath
+            : Path.Combine(AppContext.BaseDirectory, "templates", templatePath);
+        fullPath = Path.GetFullPath(fullPath);
 
-        if (!File.Exists(templatePath))
-            throw new FileNotFoundException($"Template not found: {templatePath}");
+        if (!File.Exists(fullPath))
+            throw new FileNotFoundException($"Template not found: {fullPath}");
 
-        Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
-        var content = File.ReadAllText(templatePath);
+        var outputDir = Path.GetDirectoryName(outputPath);
+        if (!string.IsNullOrEmpty(outputDir))
+        {
+            Directory.CreateDirectory(outputDir);
+        }
+
+        var content = File.ReadAllText(fullPath);
 
         foreach (var token in Tokens)
             content = content.Replace($"{{{{{token.Key}}}}}", token.Value);
 
         File.WriteAllText(outputPath, content);
-        Console.WriteLine($"[Render] {outputPath}");
     }
 
-    public void AddPackage(string packageName)
+    public void AddPackage(string packageName, string? projectPath = null, string? version = null)
     {
-        // TODO
-        Console.WriteLine($"[NuGet] Would install: {packageName}");
+        if (string.IsNullOrWhiteSpace(projectPath))
+            throw new ArgumentNullException(nameof(projectPath), "Project path cannot be null or empty");
+
+        projectPath = projectPath.Replace('/', Path.DirectorySeparatorChar)
+            .Replace('\\', Path.DirectorySeparatorChar)
+            .TrimEnd(Path.DirectorySeparatorChar);
+
+        var projectDir = Path.Combine(TargetDirectory, projectPath);
+        var projectFile = Path.Combine(projectDir, $"{Path.GetFileName(projectPath)}.csproj");
+        if (!File.Exists(projectFile))
+            throw new FileNotFoundException($"Project file not found: {projectFile}");
+
+        var versionSuffix = string.IsNullOrEmpty(version) ? "" : $" -v {version}";
+
+        RunDotNet($"add \"{projectFile}\" package {packageName}{versionSuffix}", projectDir);
     }
 
     public void CreateDirectory()
@@ -80,9 +100,12 @@ public sealed class TemplateContext
         };
 
         process.Start();
+        var error = process.StandardError.ReadToEnd();
         process.WaitForExit();
 
         if (process.ExitCode != 0)
-            throw new InvalidOperationException(process.StandardError.ReadToEnd());
+        {
+            throw new InvalidOperationException($"Error: {error}");
+        }
     }
 }

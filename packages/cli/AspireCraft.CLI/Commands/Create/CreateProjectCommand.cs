@@ -12,12 +12,12 @@ public sealed class CreateProjectCommand : Command
         AppConsole.WriteLine("[yellow]Let's get started[/]", isStart: true);
 
         var command = new CreateUserPromptCommand();
-        var config = command.PromptUser();
+        var configuration = command.PromptUser();
 
         AppConsole.WriteLine();
 
-        var renderer = new TemplateRenderer();
-        renderer.Run(config);
+        TemplateEngine.CreateDefault()
+            .Generate(configuration);
 
         AnsiConsole.WriteLine();
         AnsiConsole.WriteLine();
@@ -27,7 +27,7 @@ public sealed class CreateProjectCommand : Command
                     new Markup($"► Then run the project")
                 )
             )
-            .Header($"[yellow] {config.ProjectName} [/]")
+            .Header($"[yellow] {configuration.ProjectName} [/]")
             .Border(BoxBorder.Rounded)
             .Padding(3, 1, 3, 1);
         AnsiConsole.Write(panel);

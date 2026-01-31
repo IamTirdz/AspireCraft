@@ -12,21 +12,27 @@ using AspireCraft.Core.Storage;
 
 namespace AspireCraft.Core.Renderers;
 
-public sealed class TemplateRenderer
+public sealed class TemplateEngine
 {
     private readonly IEnumerable<IProjectTemplate> _templates;
     private readonly IEnumerable<IProjectRenderer> _renderers;
 
-    public TemplateRenderer()
+    private TemplateEngine(IEnumerable<IProjectRenderer> renderers, IEnumerable<IPackageInstaller> installers)
     {
-        _renderers = new List<IProjectRenderer>()
+        _renderers = renderers;
+        _templates = _renderers.Select(t => new GenericTemplate(t, installers)).ToList();
+    }
+
+    public static TemplateEngine CreateDefault()
+    {
+        var renderers = new List<IProjectRenderer>()
         {
             new CleanArchitectureRenderer(),
             new ServerlessRenderer(),
             new NLayerRenderer(),
         };
 
-        _templates = _renderers.Select(t => new GenericTemplate(t, new List<IPackageInstaller>
+        var installer = new List<IPackageInstaller>
         {
             new SqlServerInstaller(),   // database
             new PostgreSqlInstaller(),
@@ -49,22 +55,22 @@ public sealed class TemplateRenderer
             new RabbitMqInstaller(),    // messaging
             new KafkaInstaller(),
             new ServiceBusInstaller(),
-        }))
-        .ToList();
+        };
+
+        return new TemplateEngine(renderers, installer);
     }
 
-    public void Run(ProjectConfiguration configuration)
+    public void Generate(ProjectConfiguration configuration)
     {
         var renderer = _renderers.FirstOrDefault(t => t.Architecture == configuration.Architecture);
         if (renderer == null)
             throw new InvalidOperationException($"Renderer for {configuration.Architecture} not found");
 
-        var context = new TemplateContext(configuration, renderer);
-
         var template = _templates.FirstOrDefault(t => t.Architecture == configuration.Architecture);
         if (template == null)
             throw new FileNotFoundException($"Template '{configuration.Architecture}' not found");
 
+        var context = new TemplateContext(configuration, renderer);
         template.Generate(configuration, context);
     }
 }
