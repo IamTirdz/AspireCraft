@@ -13,6 +13,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+	<Content Include="..\..\..\templates\**\*">
+	  <Pack>true</Pack>
+	  <PackagePath>templates/</PackagePath>
+	  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	</Content>
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Scriban" Version="6.5.4" />
     <PackageReference Include="Spectre.Console" Version="0.54.0" />
     <PackageReference Include="Spectre.Console.Cli" Version="0.53.1" />
