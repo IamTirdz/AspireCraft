@@ -20,6 +20,7 @@ public sealed class PromptWizard
                 case PromptType.Text:
                     var input = AnsiConsole.Prompt(
                         new TextPrompt<string>("[grey]│[/] ")
+                        .PromptStyle("deepSkyBlue2")
                         .Validate(val => string.IsNullOrWhiteSpace(val)
                             ? ValidationResult.Error("Value cannot be empty")
                             : ValidationResult.Success()));
@@ -31,29 +32,29 @@ public sealed class PromptWizard
                     var options = defaultValue ? new[] { "Yes", "No" } : new[] { "No", "Yes" };
                     var selection = AnsiConsole.Prompt(
                         new SelectionPrompt<string>()
-                        .Title("")
+                        .HighlightStyle("deepSkyBlue3_1")
                         .AddChoices(options));
                     answer = selection == "Yes";
-                    AnsiConsole.MarkupLine($"[grey]│[/] [white] {selection}[/]");
+                    AnsiConsole.MarkupLine($"[grey]│[/] [deepSkyBlue2]{selection}[/]");
                     break;
 
                 case PromptType.SingleSelect when prompt.Choices != null:
                     var result = AnsiConsole.Prompt(
                         new SelectionPrompt<string>()
-                        .Title("")
+                        .HighlightStyle("deepSkyBlue3_1")
                         .AddChoices(prompt.Choices));
                     answer = result ?? prompt.DefaultValue ?? string.Empty;
-                    AnsiConsole.MarkupLine($"[grey]│[/] [white] {Markup.Escape(result!)}[/]");
+                    AnsiConsole.MarkupLine($"[grey]│[/] [deepSkyBlue2]{Markup.Escape(result!)}[/]");
                     break;
 
                 case PromptType.MultiSelect when prompt.Choices != null:
                     var results = AnsiConsole.Prompt(
                         new MultiSelectionPrompt<string>()
-                        .Title("")
+                        .HighlightStyle("deepSkyBlue3_1")
                         .AddChoices(prompt.Choices));
                     var selectedOption = results.Any() ? results : (prompt.DefaultValue as IEnumerable<string> ?? new List<string>());
                     answer = selectedOption;
-                    AnsiConsole.MarkupLine($"[grey]│[/] [white]{Markup.Escape(string.Join(", ", selectedOption))}[/]");
+                    AnsiConsole.MarkupLine($"[grey]│[/] [deepSkyBlue2]{Markup.Escape(string.Join(", ", selectedOption))}[/]");
                     break;
 
                 default:

@@ -1,5 +1,8 @@
 ﻿using AspireCraft.CLI.Commands.Projects;
 using Spectre.Console.Cli;
+using System.Text;
+
+Console.OutputEncoding = Encoding.UTF8;
 
 var app = new CommandApp();
 

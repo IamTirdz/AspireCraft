@@ -3,6 +3,7 @@ using AspireCraft.CLI.Prompts;
 using AspireCraft.Runtime;
 using Spectre.Console;
 using Spectre.Console.Cli;
+using System.Reflection;
 
 namespace AspireCraft.CLI.Commands.Projects;
 
@@ -27,20 +28,21 @@ public sealed class CreateProjectCommand : Command<CreateProjectCommand.Settings
         var wizard = new PromptWizard();
         var userInputs = wizard.Ask(prompts);
         var projectInfo = wizard.GetInputs(userInputs);
+        var outputPath = GetOutputPath();
 
-        AnsiConsole.MarkupLine("[green]Project initialized[/]");
+        AnsiConsole.MarkupLine("[grey]│[/] ");
+        AnsiConsole.MarkupLine("[grey]│[/] [green]Project initialized[/]");
 
         var engine = new ProjectGenerator();
         AnsiConsole.Progress()
             .Start(ctx =>
             {
                 var task = ctx.AddTask("[green]Generating project[/]");
-                engine.Generate(projectInfo);
+                engine.Generate(projectInfo, outputPath);
                 task.Increment(100);
             });
 
         var solutionManager = new SolutionManager();
-        var outputPath = GetOutputPath();
         AnsiConsole.Progress()
            .Start(ctx =>
            {
@@ -48,6 +50,9 @@ public sealed class CreateProjectCommand : Command<CreateProjectCommand.Settings
                solutionManager.CreateSolution(projectInfo, outputPath);
                task.Increment(100);
            });
+
+        AnsiConsole.MarkupLine("[grey]│[/] ");
+        AnsiConsole.MarkupLine("[grey]└[/] [yellow]Project generated successfully![/]");
 
         ShowMigrationBanner(projectInfo.Name);
         return 0;
@@ -72,7 +77,7 @@ public sealed class CreateProjectCommand : Command<CreateProjectCommand.Settings
             .Expand();
         table.AddColumn(new TableColumn("").LeftAligned());
         table.AddColumn(new TableColumn("").RightAligned());
-        table.AddRow("[cyan2]Backend as Code Generator[/]", "[grey]ver 1.1.0[/]");
+        table.AddRow("[cyan2]Backend as Code Generator[/]", $"[grey]ver {GetAppVersion()}[/]");
 
         AnsiConsole.Write(table);
         AnsiConsole.WriteLine();
@@ -92,5 +97,13 @@ public sealed class CreateProjectCommand : Command<CreateProjectCommand.Settings
             .Padding(3, 1, 3, 1);
 
         AnsiConsole.Write(panel);
+    }
+
+    private string GetAppVersion()
+    {
+        var assembly = Assembly.GetExecutingAssembly();
+        var versionAttr = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>();
+
+        return versionAttr?.InformationalVersion?.Split('+')[0] ?? "1.0.0";
     }
 }
