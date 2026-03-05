@@ -1,8 +1,0 @@
-{
-  "profiles": {
-    "AspireCraft.CLI": {
-      "commandName": "Project",
-      "commandLineArgs": "create"
-    }
-  }
-}

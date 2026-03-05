@@ -3,23 +3,15 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.14.36414.22
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "cli", "cli", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AspireCraft.CLI", "src\cli\AspireCraft.CLI\AspireCraft.CLI.csproj", "{16B55403-11F0-457A-91AA-84DB9E167DE3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AspireCraft.CLI", "packages\cli\AspireCraft.CLI\AspireCraft.CLI.csproj", "{114148D6-CA16-482D-9C8E-E9D8538060CE}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AspireCraft.Builder", "src\core\AspireCraft.Builder\AspireCraft.Builder.csproj", "{0A2E9C4C-3BD9-4A2A-B0FA-69BED5D9CF26}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "templates", "templates", "{0F36E162-3BA3-4A3E-82CA-DCF1669D3E5E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AspireCraft.Plugins", "src\core\AspireCraft.Plugins\AspireCraft.Plugins.csproj", "{AE877E52-B729-4634-B462-4303C9A15B26}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "clean-architecture", "clean-architecture", "{2B856767-0BA9-411E-AE58-E7CBE4DACA0C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AspireCraft.Runtime", "src\core\AspireCraft.Runtime\AspireCraft.Runtime.csproj", "{89A8907A-467E-40DC-8B5F-3486C0070DBD}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{52646F83-E06A-4A53-ACAB-267C38F84B4C}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{BB7F4697-8B42-4CBD-9224-975211391FE9}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "dashboard", "dashboard", "{7A8F7F33-3A58-43E3-926D-29ADDE5919C4}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "core", "core", "{7C69D50C-7F02-4F09-82E5-25F605770F27}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AspireCraft.Core", "packages\core\AspireCraft.Core\AspireCraft.Core.csproj", "{6D0373B0-E5CF-4B24-B5E4-2BD966BBA42F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AspireCraft.Core", "src\core\AspireCraft.Core\AspireCraft.Core.csproj", "{8684CFE6-4E77-4E92-AA40-E15D3EA8FE2C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -27,25 +19,29 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{114148D6-CA16-482D-9C8E-E9D8538060CE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{114148D6-CA16-482D-9C8E-E9D8538060CE}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{114148D6-CA16-482D-9C8E-E9D8538060CE}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{114148D6-CA16-482D-9C8E-E9D8538060CE}.Release|Any CPU.Build.0 = Release|Any CPU
-		{6D0373B0-E5CF-4B24-B5E4-2BD966BBA42F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{6D0373B0-E5CF-4B24-B5E4-2BD966BBA42F}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{6D0373B0-E5CF-4B24-B5E4-2BD966BBA42F}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{6D0373B0-E5CF-4B24-B5E4-2BD966BBA42F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{16B55403-11F0-457A-91AA-84DB9E167DE3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{16B55403-11F0-457A-91AA-84DB9E167DE3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{16B55403-11F0-457A-91AA-84DB9E167DE3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{16B55403-11F0-457A-91AA-84DB9E167DE3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0A2E9C4C-3BD9-4A2A-B0FA-69BED5D9CF26}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0A2E9C4C-3BD9-4A2A-B0FA-69BED5D9CF26}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0A2E9C4C-3BD9-4A2A-B0FA-69BED5D9CF26}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0A2E9C4C-3BD9-4A2A-B0FA-69BED5D9CF26}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AE877E52-B729-4634-B462-4303C9A15B26}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AE877E52-B729-4634-B462-4303C9A15B26}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AE877E52-B729-4634-B462-4303C9A15B26}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AE877E52-B729-4634-B462-4303C9A15B26}.Release|Any CPU.Build.0 = Release|Any CPU
+		{89A8907A-467E-40DC-8B5F-3486C0070DBD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{89A8907A-467E-40DC-8B5F-3486C0070DBD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{89A8907A-467E-40DC-8B5F-3486C0070DBD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{89A8907A-467E-40DC-8B5F-3486C0070DBD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8684CFE6-4E77-4E92-AA40-E15D3EA8FE2C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8684CFE6-4E77-4E92-AA40-E15D3EA8FE2C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8684CFE6-4E77-4E92-AA40-E15D3EA8FE2C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8684CFE6-4E77-4E92-AA40-E15D3EA8FE2C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(NestedProjects) = preSolution
-		{114148D6-CA16-482D-9C8E-E9D8538060CE} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
-		{2B856767-0BA9-411E-AE58-E7CBE4DACA0C} = {0F36E162-3BA3-4A3E-82CA-DCF1669D3E5E}
-		{52646F83-E06A-4A53-ACAB-267C38F84B4C} = {2B856767-0BA9-411E-AE58-E7CBE4DACA0C}
-		{BB7F4697-8B42-4CBD-9224-975211391FE9} = {2B856767-0BA9-411E-AE58-E7CBE4DACA0C}
-		{7A8F7F33-3A58-43E3-926D-29ADDE5919C4} = {2B856767-0BA9-411E-AE58-E7CBE4DACA0C}
-		{6D0373B0-E5CF-4B24-B5E4-2BD966BBA42F} = {7C69D50C-7F02-4F09-82E5-25F605770F27}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {B1377B83-65AE-40B6-91E3-277E6F317E82}
