@@ -13,9 +13,9 @@ public sealed class PromptDefinition
         DefaultValue = defaultValue;
     }
 
-    public string Key { get; init; }
-    public string Question { get; init; }
-    public PromptType Type { get; init; }
-    public string[]? Choices { get; init; }
-    public object? DefaultValue { get; init; }
+    public string Key { get; set; }
+    public string Question { get; set; }
+    public PromptType Type { get; set; }
+    public string[]? Choices { get; set; }
+    public object? DefaultValue { get; set; }
 }

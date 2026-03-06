@@ -27,4 +27,14 @@ public static class EnumExtensions
             })
             .ToArray();
     }
+
+    public static string GetShortName(this Enum value)
+    {
+        var attr = value.GetType()
+            .GetMember(value.ToString())
+            .FirstOrDefault()?
+            .GetCustomAttribute<DisplayAttribute>();
+
+        return attr?.GetShortName() ?? string.Empty;
+    }
 }

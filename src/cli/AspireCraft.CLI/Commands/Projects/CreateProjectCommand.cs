@@ -1,6 +1,7 @@
 ﻿using AspireCraft.Builder.Generators;
+using AspireCraft.Builder.Services;
 using AspireCraft.CLI.Prompts;
-using AspireCraft.Runtime;
+using AspireCraft.Core.Models;
 using Spectre.Console;
 using Spectre.Console.Cli;
 using System.Reflection;
@@ -28,33 +29,49 @@ public sealed class CreateProjectCommand : Command<CreateProjectCommand.Settings
         var wizard = new PromptWizard();
         var userInputs = wizard.Ask(prompts);
         var projectInfo = wizard.GetInputs(userInputs);
-        var outputPath = GetOutputPath();
+        projectInfo.ProjectName = projectInfo.ProjectName.Replace(" ", "") + ".Backend";
 
         AnsiConsole.MarkupLine("[grey]│[/] ");
         AnsiConsole.MarkupLine("[grey]│[/] [green]Project initialized[/]");
 
-        var engine = new ProjectGenerator();
+        var templateGenerator = new ProjectGenerationService();
+        var solutionGenerator = new SolutionGenerator();
+        var projectGenerator = new ProjectGenerator();
+        var referenceGenerator = new ReferenceGenerator();
+
+        TemplateDefinition template = null!;
+
         AnsiConsole.Progress()
+            .AutoClear(false)
+            .Columns(
+                new TaskDescriptionColumn(),
+                new ProgressBarColumn(),
+                new PercentageColumn(),
+                new ElapsedTimeColumn()
+            )
             .Start(ctx =>
             {
-                var task = ctx.AddTask("[green]Generating project[/]");
-                engine.Generate(projectInfo, outputPath);
-                task.Increment(100);
-            });
+                var templateGeneratorTask = ctx.AddTask("[grey]│[/] [green]Generating template[/]");
+                template = templateGenerator.Generate(projectInfo);
+                templateGeneratorTask.Increment(100);
 
-        var solutionManager = new SolutionManager();
-        AnsiConsole.Progress()
-           .Start(ctx =>
-           {
-               var task = ctx.AddTask("[green]Craeting solution[/]");
-               solutionManager.CreateSolution(projectInfo, outputPath);
-               task.Increment(100);
-           });
+                var solutionGeneratorTask = ctx.AddTask("[grey]│[/] [green]Creating solution[/]");
+                projectInfo.SolutionPath = solutionGenerator.Create(projectInfo.ProjectName, GetOutputPath());
+                solutionGeneratorTask.Increment(100);
+
+                var projectGeneratorTask = ctx.AddTask("[grey]│[/] [green]Generating project[/]");
+                projectGenerator.Generate(projectInfo, template);
+                projectGeneratorTask.Increment(100);
+
+                var referenceGeneratorTask = ctx.AddTask("[grey]│[/] [green]Applying references[/]");
+                referenceGenerator.ApplyReferences(projectInfo, template);
+                referenceGeneratorTask.Increment(100);
+            });
 
         AnsiConsole.MarkupLine("[grey]│[/] ");
         AnsiConsole.MarkupLine("[grey]└[/] [yellow]Project generated successfully![/]");
 
-        ShowMigrationBanner(projectInfo.Name);
+        ShowMigrationBanner(projectInfo.ProjectName);
         return 0;
     }
 

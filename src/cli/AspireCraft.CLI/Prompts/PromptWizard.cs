@@ -73,7 +73,7 @@ public sealed class PromptWizard
 
         return new ProjectContext
         {
-            Name = GetVal<string>(dict, "projectName"),
+            ProjectName = GetVal<string>(dict, "projectName"),
             Template = GetVal<string>(dict, "architecture"),
             Framework = GetVal<string>(dict, "framework"),
             Database = GetVal<string>(dict, "database"),

@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\AspireCraft.Core\AspireCraft.Core.csproj" />
+    <ProjectReference Include="..\AspireCraft.Plugins\AspireCraft.Plugins.csproj" />
     <ProjectReference Include="..\AspireCraft.Runtime\AspireCraft.Runtime.csproj" />
   </ItemGroup>
 
