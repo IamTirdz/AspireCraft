@@ -9,59 +9,33 @@ public sealed class PromptWizard
     public Dictionary<string, object> Ask(List<PromptDefinition> prompts)
     {
         var answers = new Dictionary<string, object>();
+
         foreach (var prompt in prompts)
         {
             AnsiConsole.MarkupLine($"[grey]│[/] ");
             AnsiConsole.MarkupLine($"[blue]◇[/] [white]{Markup.Escape(prompt.Question)}[/]");
 
-            object answer;
-            switch (prompt.Type)
+            switch (prompt)
             {
-                case PromptType.Text:
-                    var input = AnsiConsole.Prompt(
-                        new TextPrompt<string>("[grey]│[/] ")
-                        .PromptStyle("deepSkyBlue2")
-                        .Validate(val => string.IsNullOrWhiteSpace(val)
-                            ? ValidationResult.Error("Value cannot be empty")
-                            : ValidationResult.Success()));
-                    answer = input ?? prompt.DefaultValue ?? string.Empty;
+                case PromptDefinition<string> p when p.Type == PromptType.Text:
+                    answers[p.Key] = AskText(p);
                     break;
 
-                case PromptType.Boolean:
-                    var defaultValue = prompt.DefaultValue as bool? ?? false;
-                    var options = defaultValue ? new[] { "Yes", "No" } : new[] { "No", "Yes" };
-                    var selection = AnsiConsole.Prompt(
-                        new SelectionPrompt<string>()
-                        .HighlightStyle("deepSkyBlue3_1")
-                        .AddChoices(options));
-                    answer = selection == "Yes";
-                    AnsiConsole.MarkupLine($"[grey]│[/] [deepSkyBlue2]{selection}[/]");
+                case PromptDefinition<bool> p when p.Type == PromptType.Boolean:
+                    answers[p.Key] = AskBoolean(p);
                     break;
 
-                case PromptType.SingleSelect when prompt.Choices != null:
-                    var result = AnsiConsole.Prompt(
-                        new SelectionPrompt<string>()
-                        .HighlightStyle("deepSkyBlue3_1")
-                        .AddChoices(prompt.Choices));
-                    answer = result ?? prompt.DefaultValue ?? string.Empty;
-                    AnsiConsole.MarkupLine($"[grey]│[/] [deepSkyBlue2]{Markup.Escape(result!)}[/]");
+                case PromptDefinition<string> p when p.Type == PromptType.SingleSelect:
+                    answers[p.Key] = AskSingleSelect(p);
                     break;
 
-                case PromptType.MultiSelect when prompt.Choices != null:
-                    var results = AnsiConsole.Prompt(
-                        new MultiSelectionPrompt<string>()
-                        .HighlightStyle("deepSkyBlue3_1")
-                        .AddChoices(prompt.Choices));
-                    var selectedOption = results.Any() ? results : (prompt.DefaultValue as IEnumerable<string> ?? new List<string>());
-                    answer = selectedOption;
-                    AnsiConsole.MarkupLine($"[grey]│[/] [deepSkyBlue2]{Markup.Escape(string.Join(", ", selectedOption))}[/]");
+                case PromptDefinition<string> p when p.Type == PromptType.MultiSelect:
+                    answers[p.Key] = AskMultiSelect(p);
                     break;
 
                 default:
                     throw new InvalidOperationException($"Invalid prompt configuration for {prompt.Key}");
             }
-
-            answers[prompt.Key] = answer;
         }
 
         return answers;
@@ -79,8 +53,8 @@ public sealed class PromptWizard
             Database = GetVal<string>(dict, "database"),
             Authentication = GetVal<string>(dict, "authentication"),
             Modules = modules.Select(key => GetVal<string>(dict, key)).ToList(),
-            TestProjects = GetVal<List<string>>(dict, "testProject") ?? new(),
-            MockLibrary = GetVal<string>(dict, "mockLib")
+            IncludeIntegrationTest = GetVal<bool>(dict, "integrationTest"),
+            IncludeArchitectureTest = GetVal<bool>(dict, "architectureTest"),
         };
     }
 
@@ -92,5 +66,106 @@ public sealed class PromptWizard
         }
 
         return default!;
+    }
+
+    private static string AskText(PromptDefinition<string> p)
+    {
+        var prompt = new TextPrompt<string>("[grey]│[/] ")
+            .PromptStyle("deepSkyBlue2")
+            .Validate(val =>
+                string.IsNullOrWhiteSpace(val)
+                    ? ValidationResult.Error("Value cannot be empty")
+                    : ValidationResult.Success());
+
+        if (!string.IsNullOrWhiteSpace(p.DefaultValue))
+        {
+            prompt.DefaultValue(p.DefaultValue);
+        }
+
+        return AnsiConsole.Prompt(prompt);
+    }
+
+    private static bool AskBoolean(PromptDefinition<bool> p)
+    {
+        var choices = p.DefaultValue
+            ? new[] { true, false }
+            : new[] { false, true };
+
+        var prompt = new SelectionPrompt<bool>()
+            .HighlightStyle("deepSkyBlue3_1")
+            .WrapAround()
+            .AddChoices(choices)
+            .UseConverter(v => v ? "Yes" : "No");
+
+        var result = AnsiConsole.Prompt(prompt);
+        AnsiConsole.MarkupLine($"[grey]│[/] [deepSkyBlue2]{(result ? "Yes" : "No")}[/]");
+
+        return result;
+    }
+
+    private static string AskSingleSelect(PromptDefinition<string> p)
+    {
+        var choices = p.Choices
+            .Where(c => !p.DisabledChoices.Contains(c))
+            .Distinct()
+            .ToList();
+
+        if (choices.Count == 1)
+        {
+            var selected = choices[0];
+            AnsiConsole.MarkupLine($"[grey]│[/] [deepSkyBlue2]{selected}[/]");
+            return selected;
+        }
+
+        if (p.DefaultValue != null && choices.Contains(p.DefaultValue))
+        {
+            choices.Remove(p.DefaultValue);
+            choices.Insert(0, p.DefaultValue);
+        }
+
+        var prompt = new SelectionPrompt<string>()
+            .HighlightStyle("deepSkyBlue3_1")
+            .WrapAround()
+            .AddChoices(choices)
+            .UseConverter(c => p.DisabledChoices!.Contains(c) ? $"[grey]{c} (Disabled)[/]" : c);
+
+        var result = AnsiConsole.Prompt(prompt);
+        AnsiConsole.MarkupLine($"[grey]│[/] [deepSkyBlue2]{Markup.Escape(result)}[/]");
+
+        return result;
+    }
+
+    private static List<string> AskMultiSelect(PromptDefinition<string> p)
+    {
+        var choices = p.Choices
+            .Where(c => !p.DisabledChoices.Contains(c))
+            .Distinct()
+            .ToList();
+
+        if (choices.Count == 1)
+        {
+            var selected = choices[0];
+            AnsiConsole.MarkupLine($"[grey]│[/] [deepSkyBlue2]{selected}[/]");
+            return new List<string> { selected };
+        }
+
+        var prompt = new MultiSelectionPrompt<string>()
+            .HighlightStyle("deepSkyBlue3_1")
+            .WrapAround()
+            .AddChoices(choices)
+            .UseConverter(c => p.DisabledChoices!.Contains(c) ? $"[grey]{c} (Disabled)[/]" : c);
+
+        if (p.DefaultValues != null)
+        {
+            foreach (var value in p.DefaultValues.Where(choices.Contains))
+            {
+                prompt.Select(value);
+            }
+        }
+
+        var result = AnsiConsole.Prompt(prompt).ToList();
+        AnsiConsole.MarkupLine($"[grey]│[/] [deepSkyBlue2]{Markup.Escape(string.Join(", ", result))}[/]");
+
+        return result;
     }
 }

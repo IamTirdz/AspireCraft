@@ -2,20 +2,33 @@
 
 namespace AspireCraft.Core.Models;
 
-public sealed class PromptDefinition
+public abstract class PromptDefinition
 {
-    public PromptDefinition(string key, string question, PromptType type, string[]? options = null, object? defaultValue = null)
+    public string Key { get; set; }
+    public string Question { get; set; }
+    public PromptType Type { get; set; }
+
+    protected PromptDefinition(string key, string question, PromptType type)
     {
         Key = key;
         Question = question;
         Type = type;
-        Choices = options;
-        DefaultValue = defaultValue;
     }
+}
 
-    public string Key { get; set; }
-    public string Question { get; set; }
-    public PromptType Type { get; set; }
-    public string[]? Choices { get; set; }
-    public object? DefaultValue { get; set; }
+public sealed class PromptDefinition<T> : PromptDefinition
+{
+    public T? DefaultValue { get; set; }
+    public IEnumerable<T>? DefaultValues { get; set; }
+    public T[]? Choices { get; set; }
+    public T[]? DisabledChoices { get; set; }
+
+    public PromptDefinition(string key, string question, PromptType type, T[]? options = null, T? defaultValue = default, IEnumerable<T>? defaultValues = null, T[]? disabledOptions = null)
+         : base(key, question, type)
+    {
+        DefaultValue = defaultValue;
+        DefaultValues = defaultValues;
+        Choices = options ?? Array.Empty<T>();
+        DisabledChoices = disabledOptions ?? Array.Empty<T>();
+    }
 }

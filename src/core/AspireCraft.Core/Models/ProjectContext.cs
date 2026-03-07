@@ -8,8 +8,8 @@ public sealed class ProjectContext
     public string Database { get; set; } = string.Empty;
     public string Authentication { get; set; } = string.Empty;
     public List<string> Modules { get; set; } = [];
-    public List<string> TestProjects { get; set; } = [];
-    public string MockLibrary { get; set; } = string.Empty;
+    public bool IncludeIntegrationTest { get; set; }
+    public bool IncludeArchitectureTest { get; set; }
 
     public string SolutionPath { get; set; } = string.Empty;
     public Dictionary<string, string> ProjectPath { get; set; } = [];
