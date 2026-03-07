@@ -12,4 +12,5 @@ public sealed class ProjectContext
     public string MockLibrary { get; set; } = string.Empty;
 
     public string SolutionPath { get; set; } = string.Empty;
+    public Dictionary<string, string> ProjectPath { get; set; } = [];
 }

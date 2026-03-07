@@ -3,28 +3,33 @@
 public sealed class TemplateDefinition
 {
     public string Name { get; set; } = string.Empty;
-    public string SrcFolder { get; set; } = "src";
-    public string TestFolder { get; set; } = "tests";
+    public string? Description { get; set; }
 
-    public List<LayerDefinition> Layers { get; set; } = [];
-    public List<ProjectReference> References { get; set; } = [];
-    public List<TestDefinition> Tests { get; set; } = [];
+    public List<ProjectDefinition> Projects { get; set; } = [];
+    public List<DependencyDefinition> Dependencies { get; set; } = [];
+    public List<ServiceDefinition> Services { get; set; } = [];
 }
 
-public sealed class LayerDefinition
+public sealed class ProjectDefinition
 {
     public string Name { get; set; } = string.Empty;
     public string Type { get; set; } = string.Empty;
+    public string Path { get; set; } = string.Empty;
 }
 
-public sealed class ProjectReference
+public sealed class DependencyDefinition
 {
-    public string From { get; set; } = string.Empty;
-    public string To { get; set; } = string.Empty;
+    public string Project { get; set; } = string.Empty;
+    public string Dependency { get; set; } = string.Empty;
 }
 
-public sealed class TestDefinition
+public sealed class ServiceDefinition
 {
-    public string Name { get; set; } = string.Empty;
-    public string Target { get; set; } = string.Empty;
+    public string Name { get; set; } = "";
+    public string Category { get; set; } = "";
+    public string Provider { get; set; } = "";
+    public string Project { get; set; } = "";
+    public string Template { get; set; } = "";
+    public string Condition { get; set; } = "";
+    public List<string> Packages { get; set; } = [];
 }

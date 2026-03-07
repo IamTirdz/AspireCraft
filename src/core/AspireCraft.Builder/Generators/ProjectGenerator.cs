@@ -10,33 +10,24 @@ public sealed class ProjectGenerator
 {
     public void Generate(ProjectContext context, TemplateDefinition template)
     {
-        var root = Path.GetDirectoryName(context.SolutionPath)!;
-        var src = Path.Combine(root, template.SrcFolder ?? "src");
-
-        Directory.CreateDirectory(src);
-
         var framework = Enum.GetValues<TargetFramework>()
             .Select(f => typeof(TargetFramework).GetField(f.ToString())?
             .GetCustomAttribute<DisplayAttribute>())
             .FirstOrDefault(a => a?.Name == context.Framework)?.ShortName ?? "net8.0";
 
-        foreach (var layer in template.Layers)
+        foreach (var project in template.Projects)
         {
-            CreateProject(context.ProjectName, layer, src, framework);
-        }
-    }
+            var name = project.Name.Replace("{{ProjectName}}", context.ProjectName);
+            var path = project.Path.Replace("{{ProjectName}}", context.ProjectName);
 
-    private static void CreateProject(string solution, LayerDefinition layer, string src, string framework)
-    {
-        var name = $"{solution}.{layer.Name}";
+            var root = Path.GetDirectoryName(context.SolutionPath)!;
+            var fullPath = Path.Combine(root, path.Replace("/", Path.DirectorySeparatorChar.ToString()));
 
-        if (layer.Type == "webapi")
-        {
-            DotnetRunner.Run($"new webapi -n {name} -f {framework}", src);
-        }
-        else
-        {
-            DotnetRunner.Run($"new classlib -n {name} -f {framework}", src);
+            Directory.CreateDirectory(fullPath);
+            DotnetRunner.Run($"new {project.Type} -n {name} -f {framework} -o .", fullPath);
+
+            var shortName = name.Replace($"{context.ProjectName}.", "");
+            context.ProjectPath[shortName] = fullPath;
         }
     }
 }

@@ -1,7 +1,7 @@
 ﻿using AspireCraft.Builder.Generators;
-using AspireCraft.Builder.Services;
+using AspireCraft.Builder.Renderers;
 using AspireCraft.CLI.Prompts;
-using AspireCraft.Core.Models;
+using AspireCraft.Core.Extensions;
 using Spectre.Console;
 using Spectre.Console.Cli;
 using System.Reflection;
@@ -29,43 +29,66 @@ public sealed class CreateProjectCommand : Command<CreateProjectCommand.Settings
         var wizard = new PromptWizard();
         var userInputs = wizard.Ask(prompts);
         var projectInfo = wizard.GetInputs(userInputs);
-        projectInfo.ProjectName = projectInfo.ProjectName.Replace(" ", "") + ".Backend";
+        projectInfo.ProjectName = projectInfo.ProjectName.TrimAll() + ".Backend";
 
-        AnsiConsole.MarkupLine("[grey]│[/] ");
-        AnsiConsole.MarkupLine("[grey]│[/] [green]Project initialized[/]");
+        var templateLoader = new TemplateLoader();
+        var templatePath = Path.Combine(AppContext.BaseDirectory, "templates", "architectures", $"{projectInfo.Template.TrimAll()}.json");
+        var template = templateLoader.Load(templatePath);
 
-        var templateGenerator = new ProjectGenerationService();
         var solutionGenerator = new SolutionGenerator();
         var projectGenerator = new ProjectGenerator();
         var referenceGenerator = new ReferenceGenerator();
+        var templateGenerator = new TemplateGenerator();
 
-        TemplateDefinition template = null!;
+        var table = new Table()
+            .NoBorder()
+            .HideHeaders()
+            .AddColumn(new TableColumn("Icon").Padding(0, 0, 0, 0))
+            .AddColumn(new TableColumn("Status").Padding(0, 0, 0, 0));
 
-        AnsiConsole.Progress()
-            .AutoClear(false)
-            .Columns(
-                new TaskDescriptionColumn(),
-                new ProgressBarColumn(),
-                new PercentageColumn(),
-                new ElapsedTimeColumn()
-            )
+        AnsiConsole.MarkupLine("[grey]│[/] ");
+        AnsiConsole.Live(table)
             .Start(ctx =>
             {
-                var templateGeneratorTask = ctx.AddTask("[grey]│[/] [green]Generating template[/]");
-                template = templateGenerator.Generate(projectInfo);
-                templateGeneratorTask.Increment(100);
+                void SetInProgress(int row, string label)
+                {
+                    table.UpdateCell(row, 1, $"[grey]{label} - In-Progress[/]");
+                    ctx.Refresh();
+                }
 
-                var solutionGeneratorTask = ctx.AddTask("[grey]│[/] [green]Creating solution[/]");
+                void SetCompleted(int row, string label)
+                {
+                    table.UpdateCell(row, 1, $"[green]{label} - Completed[/]");
+                    ctx.Refresh();
+                }
+
+                var iconLabel = "[grey]│[/]";
+                var templateTask = "Generating template";
+                var solutiontask = "Creating solution";
+                var projectTask = "Generating project";
+                var referenceTask = "Applying reference";
+
+                table.AddRow(iconLabel, templateTask);
+                table.AddRow(iconLabel, solutiontask);
+                table.AddRow(iconLabel, projectTask);
+                table.AddRow(iconLabel, referenceTask);
+                ctx.Refresh();
+
+                SetInProgress(0, solutiontask);
                 projectInfo.SolutionPath = solutionGenerator.Create(projectInfo.ProjectName, GetOutputPath());
-                solutionGeneratorTask.Increment(100);
+                SetCompleted(0, solutiontask);
 
-                var projectGeneratorTask = ctx.AddTask("[grey]│[/] [green]Generating project[/]");
+                SetInProgress(1, projectTask);
                 projectGenerator.Generate(projectInfo, template);
-                projectGeneratorTask.Increment(100);
+                SetCompleted(1, projectTask);
 
-                var referenceGeneratorTask = ctx.AddTask("[grey]│[/] [green]Applying references[/]");
+                SetInProgress(2, referenceTask);
                 referenceGenerator.ApplyReferences(projectInfo, template);
-                referenceGeneratorTask.Increment(100);
+                SetCompleted(2, referenceTask);
+
+                SetInProgress(3, templateTask);
+                templateGenerator.Generate(projectInfo);
+                SetCompleted(3, templateTask);
             });
 
         AnsiConsole.MarkupLine("[grey]│[/] ");

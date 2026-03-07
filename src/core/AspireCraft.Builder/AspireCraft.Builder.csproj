@@ -7,6 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Scriban" Version="6.5.5" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\AspireCraft.Core\AspireCraft.Core.csproj" />
     <ProjectReference Include="..\AspireCraft.Plugins\AspireCraft.Plugins.csproj" />
     <ProjectReference Include="..\AspireCraft.Runtime\AspireCraft.Runtime.csproj" />

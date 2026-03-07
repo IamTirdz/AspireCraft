@@ -7,8 +7,8 @@ public enum SmsProvider
     [Display(Name = "None")]
     None,
 
-    [Display(Name = "Twillio")]
-    Twillio,
+    [Display(Name = "Twilio")]
+    Twilio,
 
     [Display(Name = "8x8 (Wavecell)")]
     EightByEight

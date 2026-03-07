@@ -7,22 +7,14 @@ public sealed class ReferenceGenerator
 {
     public void ApplyReferences(ProjectContext context, TemplateDefinition template)
     {
-        var root = Path.GetDirectoryName(context.SolutionPath)!;
-        var src = Path.Combine(root, template.SrcFolder);
-
-        foreach (var reference in template.References)
+        foreach (var reference in template.Dependencies)
         {
-            var fromProj = Path.Combine(src,
-                $"{context.ProjectName}.{reference.From}",
-                $"{context.ProjectName}.{reference.From}.csproj");
+            var projectPath = context.ProjectPath[reference.Project];
+            var dependencyPath = context.ProjectPath[reference.Dependency];
 
-            var toProj = Path.Combine(src,
-                $"{context.ProjectName}.{reference.To}",
-                $"{context.ProjectName}.{reference.To}.csproj");
+            var dependencyProj = Directory.GetFiles(dependencyPath, "*.csproj").FirstOrDefault();
 
-            DotnetRunner.Run(
-                $"add \"{fromProj}\" reference \"{toProj}\"",
-                Path.GetDirectoryName(fromProj)!);
+            DotnetRunner.Run($"add reference \"{dependencyProj}\"", projectPath);
         }
     }
 }
