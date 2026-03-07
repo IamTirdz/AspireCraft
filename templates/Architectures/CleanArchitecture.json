@@ -1,0 +1,114 @@
+{
+  "name": "clean-architecture",
+  "description": "Clean Architecture with CQRS",
+  "projects": [
+    {
+      "name": "{{ProjectName}}.API",
+      "type": "webapi",
+      "path": "src/{{ProjectName}}.API"
+    },
+    {
+      "name": "{{ProjectName}}.Application",
+      "type": "classlib",
+      "path": "src/{{ProjectName}}.Application"
+    },
+    {
+      "name": "{{ProjectName}}.Domain",
+      "type": "classlib",
+      "path": "src/{{ProjectName}}.Domain"
+    },
+    {
+      "name": "{{ProjectName}}.Infrastructure",
+      "type": "classlib",
+      "path": "src/{{ProjectName}}.Infrastructure"
+    },
+    {
+      "name": "{{ProjectName}}.UnitTests",
+      "type": "xunit",
+      "path": "tests/{{ProjectName}}.UnitTests"
+    },
+    {
+      "name": "{{ProjectName}}.IntegrationTests",
+      "type": "xunit",
+      "path": "tests/{{ProjectName}}.IntegrationTests"
+    },
+    {
+      "name": "{{ProjectName}}.ArchitectureTests",
+      "type": "xunit",
+      "path": "tests/{{ProjectName}}.ArchitectureTests"
+    }
+  ],
+  "dependencies": [
+    {
+      "project": "API",
+      "dependency": "Application"
+    },
+    {
+      "project": "Infrastructure",
+      "dependency": "Application"
+    },
+    {
+      "project": "Infrastructure",
+      "dependency": "Domain"
+    },
+    {
+      "project": "Application",
+      "dependency": "Domain"
+    },
+    {
+      "project": "UnitTests",
+      "dependency": "Application"
+    },
+    {
+      "project": "IntegrationTests",
+      "dependency": "API"
+    },
+    {
+      "project": "IntegrationTests",
+      "dependency": "Infrastructure"
+    },
+    {
+      "project": "ArchitectureTests",
+      "dependency": "Domain"
+    },
+    {
+      "project": "ArchitectureTests",
+      "dependency": "Application"
+    }
+  ],
+  "services": [
+    {
+      "name": "SendGrid",
+      "category": "email",
+      "provider": "sendgrid",
+      "project": "Infrastructure",
+      "template": "services/email/sendgrid",
+      "packages": [
+        "SendGrid"
+      ],
+      "condition": "email == 'sendgrid'"
+    },
+    {
+      "name": "Mailgun",
+      "category": "email",
+      "provider": "mailgun",
+      "project": "Infrastructure",
+      "template": "services/email/mailgun",
+      "packages": [
+        "Mailgun"
+      ],
+      "condition": "email == 'mailgun'"
+    },
+    {
+      "name": "AWS S3",
+      "category": "storage",
+      "provider": "aws-s3",
+      "project": "Infrastructure",
+      "template": "services/storage/s3",
+      "packages": [
+        "AWSSDK.S3"
+      ],
+      "condition": "storage == 'aws-s3'"
+    }
+  ]
+}
