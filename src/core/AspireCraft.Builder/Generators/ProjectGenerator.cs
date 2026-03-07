@@ -23,11 +23,30 @@ public sealed class ProjectGenerator
             var root = Path.GetDirectoryName(context.SolutionPath)!;
             var fullPath = Path.Combine(root, path.Replace("/", Path.DirectorySeparatorChar.ToString()));
 
+            if (SkipProject(name, context))
+            {
+                continue;
+            }
+
             Directory.CreateDirectory(fullPath);
             DotnetRunner.Run($"new {project.Type} -n {name} -f {framework} -o .", fullPath);
+
+            var csproj = Path.Combine(fullPath, $"{name}.csproj");
+            DotnetRunner.Run($"sln add {csproj}", root);
 
             var shortName = name.Replace($"{context.ProjectName}.", "");
             context.ProjectPath[shortName] = fullPath;
         }
+    }
+
+    private bool SkipProject(string projectName, ProjectContext context)
+    {
+        if (projectName.Contains("IntegrationTests") && !context.IncludeIntegrationTest)
+            return true;
+
+        if (projectName.Contains("ArchitectureTests") && !context.IncludeArchitectureTest)
+            return true;
+
+        return false;
     }
 }

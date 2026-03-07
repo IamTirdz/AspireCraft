@@ -14,91 +14,116 @@ public sealed class CreateProjectCommand : Command<CreateProjectCommand.Settings
 
     public override int Execute(CommandContext context, Settings settings, CancellationToken cancellationToken)
     {
-        ConsoleHeader();
-        AnsiConsole.MarkupLine("[grey]┌[/] [yellow]Let's get started[/]");
+        try
+        {
+            ConsoleHeader();
+            AnsiConsole.MarkupLine("[grey]┌[/] [yellow]Let's get started[/]");
 
-        var prompts = new PromptBuilder()
-            .AddProjectSetupPrompts()
-            .AddArchitecturePrompts()
-            .AddDatabasePrompts()
-            .AddIntegrationPrompts()
-            .AddSecurityPrompts()
-            .AddTestPrompts()
-            .Build();
+            var prompts = new PromptBuilder()
+                .AddProjectSetupPrompts()
+                .AddArchitecturePrompts()
+                .AddDatabasePrompts()
+                .AddIntegrationPrompts()
+                .AddSecurityPrompts()
+                .AddTestPrompts()
+                .Build();
 
-        var wizard = new PromptWizard();
-        var userInputs = wizard.Ask(prompts);
-        var projectInfo = wizard.GetInputs(userInputs);
-        projectInfo.ProjectName = projectInfo.ProjectName.TrimAll() + ".Backend";
+            var wizard = new PromptWizard();
+            var userInputs = wizard.Ask(prompts);
+            var projectInfo = wizard.GetInputs(userInputs);
+            projectInfo.ProjectName = projectInfo.ProjectName.TrimAll() + ".Backend";
 
-        var templateLoader = new TemplateLoader();
-        var templatePath = Path.Combine(AppContext.BaseDirectory, "templates", "architectures", $"{projectInfo.Template.TrimAll()}.json");
-        var template = templateLoader.Load(templatePath);
+            var templateLoader = new TemplateLoader();
+            var templatePath = Path.Combine(AppContext.BaseDirectory, "templates", "architecture", $"{projectInfo.Template.TrimAll()}.json");
+            var template = templateLoader.Load(templatePath);
 
-        var solutionGenerator = new SolutionGenerator();
-        var projectGenerator = new ProjectGenerator();
-        var referenceGenerator = new ReferenceGenerator();
-        var templateGenerator = new TemplateGenerator();
+            var solutionGenerator = new SolutionGenerator();
+            var projectGenerator = new ProjectGenerator();
+            var referenceGenerator = new ReferenceGenerator();
+            var templateGenerator = new TemplateGenerator();
 
-        var table = new Table()
-            .NoBorder()
-            .HideHeaders()
-            .AddColumn(new TableColumn("Icon").Padding(0, 0, 0, 0))
-            .AddColumn(new TableColumn("Status").Padding(0, 0, 0, 0));
+            var table = new Table()
+                .NoBorder()
+                .HideHeaders()
+                .AddColumn(new TableColumn("Icon").Padding(0, 0, 0, 0))
+                .AddColumn(new TableColumn("Status").Padding(0, 0, 0, 0));
 
-        AnsiConsole.MarkupLine("[grey]│[/] ");
-        AnsiConsole.Live(table)
-            .Start(ctx =>
-            {
-                void SetInProgress(int row, string label)
+            AnsiConsole.MarkupLine("[grey]│[/] ");
+            AnsiConsole.Live(table)
+                .Start(ctx =>
                 {
-                    table.UpdateCell(row, 1, $"[grey]{label} - In-Progress[/]");
+                    void SetInProgress(int row, string label)
+                    {
+                        table.UpdateCell(row, 0, "[yellow]○[/]");
+                        table.UpdateCell(row, 1, $"[yellow]{label} - Running...[/]");
+                        ctx.Refresh();
+                    }
+
+                    void SetCompleted(int row, string label)
+                    {
+                        table.UpdateCell(row, 0, "[green]✔[/]");
+                        table.UpdateCell(row, 1, $"[green]{label} - Done[/]");
+                        ctx.Refresh();
+                    }
+
+                    void SetFailed(int row, string label, string error)
+                    {
+                        table.UpdateCell(row, 0, "[red]✘[/]");
+                        table.UpdateCell(row, 1, $"[red]{label} - Failed[/]");
+                        ctx.Refresh();
+                    }
+
+                    var iconLabel = "[grey]│[/] ";
+                    var templateTask = "Generating template";
+                    var solutiontask = "Creating solution";
+                    var projectTask = "Generating project";
+                    var referenceTask = "Applying reference";
+
+                    table.AddRow(iconLabel, templateTask);
+                    table.AddRow(iconLabel, solutiontask);
+                    table.AddRow(iconLabel, projectTask);
+                    table.AddRow(iconLabel, referenceTask);
                     ctx.Refresh();
-                }
 
-                void SetCompleted(int row, string label)
-                {
-                    table.UpdateCell(row, 1, $"[green]{label} - Completed[/]");
-                    ctx.Refresh();
-                }
+                    try
+                    {
+                        SetInProgress(0, solutiontask);
+                        projectInfo.SolutionPath = solutionGenerator.Create(projectInfo.ProjectName, GetOutputPath());
+                        SetCompleted(0, solutiontask);
 
-                var iconLabel = "[grey]│[/]";
-                var templateTask = "Generating template";
-                var solutiontask = "Creating solution";
-                var projectTask = "Generating project";
-                var referenceTask = "Applying reference";
+                        SetInProgress(1, projectTask);
+                        projectGenerator.Generate(projectInfo, template);
+                        SetCompleted(1, projectTask);
 
-                table.AddRow(iconLabel, templateTask);
-                table.AddRow(iconLabel, solutiontask);
-                table.AddRow(iconLabel, projectTask);
-                table.AddRow(iconLabel, referenceTask);
-                ctx.Refresh();
+                        SetInProgress(2, referenceTask);
+                        referenceGenerator.ApplyReferences(projectInfo, template);
+                        SetCompleted(2, referenceTask);
 
-                SetInProgress(0, solutiontask);
-                projectInfo.SolutionPath = solutionGenerator.Create(projectInfo.ProjectName, GetOutputPath());
-                SetCompleted(0, solutiontask);
+                        SetInProgress(3, templateTask);
+                        templateGenerator.Generate(projectInfo);
+                        SetCompleted(3, templateTask);
+                    }
+                    catch (Exception ex)
+                    {
+                        SetFailed(0, solutiontask, ex.Message);
+                        throw;
+                    }
+                });
 
-                SetInProgress(1, projectTask);
-                projectGenerator.Generate(projectInfo, template);
-                SetCompleted(1, projectTask);
+            AnsiConsole.MarkupLine("[grey]│[/] ");
+            AnsiConsole.MarkupLine("[grey]└[/] [yellow]Project generated successfully![/]");
 
-                SetInProgress(2, referenceTask);
-                referenceGenerator.ApplyReferences(projectInfo, template);
-                SetCompleted(2, referenceTask);
+            ShowMigrationBanner(projectInfo.ProjectName);
+        }
+        catch (Exception ex)
+        {
+            ShowFailureBanner(ex.Message);
+        }
 
-                SetInProgress(3, templateTask);
-                templateGenerator.Generate(projectInfo);
-                SetCompleted(3, templateTask);
-            });
-
-        AnsiConsole.MarkupLine("[grey]│[/] ");
-        AnsiConsole.MarkupLine("[grey]└[/] [yellow]Project generated successfully![/]");
-
-        ShowMigrationBanner(projectInfo.ProjectName);
         return 0;
     }
 
-    private string GetOutputPath()
+    private static string GetOutputPath()
     {
 #if DEBUG
         var localFolder = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
@@ -108,7 +133,7 @@ public sealed class CreateProjectCommand : Command<CreateProjectCommand.Settings
 #endif
     }
 
-    private void ConsoleHeader()
+    private static void ConsoleHeader()
     {
         AnsiConsole.Write(new FigletText("ASPIRE CRAFT").Color(Color.Cyan1));
 
@@ -123,7 +148,7 @@ public sealed class CreateProjectCommand : Command<CreateProjectCommand.Settings
         AnsiConsole.WriteLine();
     }
 
-    private void ShowMigrationBanner(string projectName)
+    private static void ShowMigrationBanner(string projectName)
     {
         AnsiConsole.WriteLine();
         var panel = new Panel(
@@ -139,7 +164,26 @@ public sealed class CreateProjectCommand : Command<CreateProjectCommand.Settings
         AnsiConsole.Write(panel);
     }
 
-    private string GetAppVersion()
+    private static void ShowFailureBanner(string errorMessage)
+    {
+        AnsiConsole.WriteLine();
+
+        var panel = new Panel(
+                new Rows(
+                    new Markup($"[red]► Error:[/]"),
+                    new Markup($"[dim]► Message:[/] {Markup.Escape(errorMessage)}"),
+                    new Markup($"[yellow]► Please check logs or try 'dotnet clean' and retry.[/]")
+                )
+            )
+            .Header("[red] [bold]OPERATION FAILED[/] [/]")
+            .Border(BoxBorder.Rounded)
+            .BorderColor(Color.Red)
+            .Padding(3, 1, 3, 1);
+
+        AnsiConsole.Write(panel);
+    }
+
+    private static string GetAppVersion()
     {
         var assembly = Assembly.GetExecutingAssembly();
         var versionAttr = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>();
