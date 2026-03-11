@@ -1,0 +1,15 @@
+﻿{{ for item in usings ~}}
+using {{ item }};
+{{ end ~}}
+
+namespace {{ namespace }};
+
+[Route("api/v{version:apiVersion}/[controller]")]
+[ApiController]
+public class {{ name }} : ControllerBase
+{
+    private IMediator _mediator = null!;
+	
+    public IMediator Mediator => _mediator 
+		??= HttpContext.RequestServices.GetRequiredService<IMediator>();
+}

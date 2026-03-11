@@ -15,16 +15,27 @@ public static class DotnetRunner
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 UseShellExecute = false,
+                CreateNoWindow = true,
                 WorkingDirectory = workingDirectory ?? Directory.GetCurrentDirectory()
             }
         };
 
+        process.StartInfo.EnvironmentVariables["DOTNET_INTERACTIVE"] = "false";
+
         process.Start();
-        process.WaitForExit();
+
+        var output = process.StandardOutput.ReadToEnd();
+        var error = process.StandardError.ReadToEnd();
+
+        if (!process.WaitForExit(60000))
+        {
+            process.Kill();
+            throw new Exception($"Command 'dotnet {args}' timed out. Output: {output}")!;
+        }
 
         if (process.ExitCode != 0)
         {
-            throw new Exception(process.StandardError.ReadToEnd())!;
+            throw new Exception($"Dotnet CLI Error: {error} \nOutput: {output}")!;
         }
     }
 }

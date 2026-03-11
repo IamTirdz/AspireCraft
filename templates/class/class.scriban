@@ -1,0 +1,142 @@
+{{ for item in usings ~}}
+using {{ item }};
+{{ end ~}}
+
+namespace {{ namespace }};
+
+{{ case type ~}}
+{{ when "controller" ~}}
+[ApiVersion("1.0")]
+public sealed class {{ name }} : ApiControllerBase
+{
+    [MapToApiVersion("1.0")]
+    [HttpGet]
+    public async Task<ActionResult> Sample()
+    {
+        return Ok();
+    }
+}
+
+{{ when "middleware" ~}}
+public sealed class {{ name }} : IMiddleware
+{
+    private readonly ILogger<{{ name }}> _logger;
+
+    public {{ name }}(ILogger<{{ name }}> logger)
+    {
+        _logger = logger;
+    }
+
+    public async Task InvokeAsync(HttpContext context, RequestDelegate next)
+    {
+        try
+        {
+            context.Response.Headers["OperationId"] = Activity.Current!.RootId;
+            await next(context);
+        }
+        catch (Exception err)
+        {
+        }
+    }
+}
+
+{{ when "entity" ~}}
+public sealed class {{ name }} : BaseEntity
+{
+}
+
+{{ when "dbcontext" ~}}
+public sealed class {{ name }} : DbContext
+{
+    public {{ name }}(DbContextOptions options) : base(options)
+    {
+    }
+}
+
+{{ when "interface" ~}}
+public interface {{ name }}
+{
+}
+
+{{ when "repository" ~}}
+public sealed class {{ name }} : GenericRepository<{{ feature }}>, I{{ name }}
+{
+    private readonly ApplicationDbContext _context;
+
+    public {{ feature }}(ApplicationDbContext context) : base(context) 
+    {
+        _context = context;
+    }
+}
+
+{{ when "command" ~}}
+public record {{ name }} : IRequest<Guid>
+{
+}
+
+public sealed class {{ name }}Handler : IRequestHandler<{{ name }}, Guid>
+{
+    public {{ name }}Handler()
+    {
+    }
+
+     public async Task<Guid> Handle({{ name }} request, CancellationToken cancellationToken)
+     {
+        throw new NotImplementedException();
+     }
+}
+
+{{ when "query" ~}}
+public record {{ name }} : IRequest<{{ feature }}Dto>
+{
+}
+
+public sealed class {{ name }}Handler : IRequestHandler<{{ name }}, {{ feature }}Dto>
+{
+    public {{ name }}Handler()
+    {
+    }
+
+     public async Task<{{ feature }}Dto> Handle({{ name }} request, CancellationToken cancellationToken)
+     {
+        throw new NotImplementedException();
+     }
+}
+
+{{ when "dto" ~}}
+public sealed class {{ name }}Dto
+{
+}
+
+{{ when "profile" ~}}
+public sealed class {{ name }} : Profile 
+{ 
+    public {{ name }}() 
+    {
+        CreateMap<{{ feature }}, {{ feature }}Dto>().ReverseMap();
+    }
+}
+
+{{ when "pipeline" ~}}
+public sealed class {{ name }}<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse> 
+    where TRequest : IRequest<TResponse>
+{
+    public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
+    {
+        return await next(cancellationToken);
+    }
+}
+
+{{ when "exception" ~}}
+public sealed class {{ name }} : Exception 
+{ 
+    public {{ name }}()
+    {
+    }
+
+    public {{ name }}(ErrorResponse errorResponse = null) : base(errorResponse) 
+    {
+    }
+}
+
+{{ end ~}}

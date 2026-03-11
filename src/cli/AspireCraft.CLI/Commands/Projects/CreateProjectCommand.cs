@@ -40,7 +40,8 @@ public sealed class CreateProjectCommand : Command<CreateProjectCommand.Settings
             var solutionGenerator = new SolutionGenerator();
             var projectGenerator = new ProjectGenerator();
             var referenceGenerator = new ReferenceGenerator();
-            var templateGenerator = new TemplateGenerator();
+            var packageGenerator = new PackageGenerator();
+            var templateGenerator = new MetadataGenerator();
 
             var table = new Table()
                 .NoBorder()
@@ -74,10 +75,11 @@ public sealed class CreateProjectCommand : Command<CreateProjectCommand.Settings
                     }
 
                     var iconLabel = "[grey]│[/] ";
-                    var templateTask = "Generating template";
+                    var templateTask = "Building template";
                     var solutiontask = "Creating solution";
-                    var projectTask = "Generating project";
-                    var referenceTask = "Applying reference";
+                    var projectTask = "Generating projects";
+                    var referenceTask = "Applying references";
+                    var packageTask = "Adding nuget packages";
 
                     table.AddRow(iconLabel, templateTask);
                     table.AddRow(iconLabel, solutiontask);
@@ -99,9 +101,13 @@ public sealed class CreateProjectCommand : Command<CreateProjectCommand.Settings
                         referenceGenerator.ApplyReferences(projectInfo, template);
                         SetCompleted(2, referenceTask);
 
-                        SetInProgress(3, templateTask);
-                        templateGenerator.Generate(projectInfo);
-                        SetCompleted(3, templateTask);
+                        SetInProgress(3, packageTask);
+                        packageGenerator.Generate(projectInfo, template);
+                        SetCompleted(3, packageTask);
+
+                        SetInProgress(4, templateTask);
+                        templateGenerator.Generate(projectInfo, template);
+                        SetCompleted(4, templateTask);
                     }
                     catch (Exception ex)
                     {

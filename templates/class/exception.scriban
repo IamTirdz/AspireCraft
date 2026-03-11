@@ -1,0 +1,23 @@
+{{ for item in usings ~}}
+using {{ item }};
+{{ end ~}}
+
+namespace {{ namespace }};
+
+[Serializable]
+public abstract class {{ name }} : Exception
+{
+    public ErrorResponse? ErrorResponse { get; set; }
+
+    public {{ name }}() : base(string.Empty) { }
+
+    public {{ name }}(string message) : base(message) { }
+    
+    public {{ name }}(string name, object key) 
+        : base($"Entity \"{name}\" ({key}) was not found.") { }
+
+    public {{ name }}(ErrorResponse errorResponse = null) : base(errorResponse) 
+    { 
+        ErrorResponse = errorResponse ?? new ErrorResponse();
+    }
+}

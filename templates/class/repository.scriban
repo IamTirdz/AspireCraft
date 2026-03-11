@@ -1,0 +1,54 @@
+{{ for item in usings ~}}
+using {{ item }};
+{{ end ~}}
+
+namespace {{ namespace }};
+
+{{ case type ~}}
+{{ when "interface" ~}}
+
+public interface {{ name }}
+{
+    Task<{{ feature }}?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<{{ feature }}>> GetAllAsync(CancellationToken cancellationToken = default);
+    Task<Guid> CreateAsync({{ feature }} entity, CancellationToken cancellationToken = default);
+    Task<bool> UpdateAsync({{ feature }} entity, CancellationToken cancellationToken = default);
+    Task<bool> RemoveAsync(Guid id, CancellationToken cancellationToken = default);
+}
+
+{{ when "base" ~}}
+public sealed class {{ name }} : I{{ name }}
+{
+    private readonly ApplicationDbContext _context;
+    public {{ name }}(ApplicationDbContext context) => _context = context;
+
+    public async Task<{{ feature }}?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default) => 
+        await _context.Set<{{ feature }}>().FindAsync(id, cancellationToken);
+
+    public async Task<IReadOnlyList<{{ feature }}>> GetAllAsync(CancellationToken cancellationToken = default) => 
+        await _context.Set<{{ feature }}>().ToListAsync(cancellationToken);
+
+    public async Task<Guid> CreateAsync({{ feature }} entity, CancellationToken cancellationToken = default)
+    {
+        await  _context.Set<{{ feature }}>().AddAsync(entity, cancellationToken);
+        await _context.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task<bool> UpdateAsync({{ feature }} entity, CancellationToken cancellationToken = default)
+    {
+        _context.Set<{{ feature }}>().Update(entity);
+        await _context.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task<bool> RemoveAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var entity = await GetByIdAsync(id, cancellationToken);
+        if (entity != null)
+        {
+            Entities.Remove(entity);
+        }
+        await _context.SaveChangesAsync(cancellationToken);
+    }
+}
+
+{{ end ~}}
