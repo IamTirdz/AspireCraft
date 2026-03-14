@@ -79,7 +79,7 @@ public sealed class PromptWizard
 
         if (!string.IsNullOrWhiteSpace(p.DefaultValue))
         {
-            // prompt.DefaultValue(p.DefaultValue);
+            prompt.DefaultValue(p.DefaultValue);
         }
 
         return AnsiConsole.Prompt(prompt);

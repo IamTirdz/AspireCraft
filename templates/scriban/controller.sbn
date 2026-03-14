@@ -1,0 +1,46 @@
+﻿{{ for item in usings ~}}
+using {{ item }};
+{{ end ~}}
+
+namespace {{ namespace }};
+
+{{ if variant == "base" -}}
+
+[ApiController]
+[Route("api/v{version:apiVersion}/[controller]")]
+public class {{ name }} : ControllerBase
+{
+    private ISender? _mediator;
+    protected ISender Mediator => _mediator ??= HttpContext.RequestServices.GetRequiredService<ISender>();
+
+    protected string OperationId => HttpContext.Response.Headers["OperationId"]!;
+}
+
+{{- else -}}
+
+[ApiVersion("1.0")]
+public sealed class {{ feature }}sController : ApiControllerBase
+{
+    [HttpGet]
+    public async Task<IActionResult> Get(CancellationToken cancellationToken)
+    {
+        var result = await Mediator.Send(new Get{{ feature }}sQuery(), cancellationToken);
+        return Ok(result);
+    }
+
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetById(Guid id, CancellationToken cancellationToken)
+    {
+        var result = await Mediator.Send(new Get{{ feature }}ByIdQuery(id), cancellationToken);
+        return Ok(result);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> Create([FromBody]Create{{ feature }}Command request, CancellationToken cancellationToken)
+    {
+        var result = await Mediator.Send(request, cancellationToken);
+        return CreatedAtAction(nameof(GetById), new { result }, result);
+    }
+}
+
+{{- end -}}

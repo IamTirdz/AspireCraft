@@ -10,7 +10,7 @@ public class PromptBuilder
 
     public PromptBuilder AddProjectSetupPrompts()
     {
-        _prompts.Add(new PromptDefinition<string>("projectName", "Project Name", PromptType.Text, defaultValue: "MyApp"));
+        _prompts.Add(new PromptDefinition<string>("projectName", "Project Name", PromptType.Text));
 
         _prompts.Add(new PromptDefinition<string>("framework", "Target Framework", PromptType.SingleSelect,
             EnumExtensions.GetEnumValues<TargetFramework>(), defaultValue: TargetFramework.DotNet8.GetDisplayName(),

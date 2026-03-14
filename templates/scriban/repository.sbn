@@ -1,0 +1,76 @@
+{{ for item in usings ~}}
+using {{ item }};
+{{ end ~}}
+
+namespace {{ namespace }};
+
+{{ case variant -}}
+{{- when "base-interface" -}}
+
+public interface {{ name }}<TEntity>
+{
+    Task<TEntity?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<TEntity>> GetAllAsync(CancellationToken cancellationToken = default);
+    Task<Guid> CreateAsync(TEntity entity, CancellationToken cancellationToken = default);
+    Task<bool> UpdateAsync(TEntity entity, CancellationToken cancellationToken = default);
+    Task<bool> RemoveAsync(Guid id, CancellationToken cancellationToken = default);
+}
+
+{{- when "interface" -}}
+
+public interface {{ name }} : IRepository<{{feature}}>
+{
+}
+
+{{- when "base" -}}
+
+public abstract class RepositoryBase<TEntity> : IRepository<TEntity> where TEntity : BaseEntity
+{
+    private readonly ApplicationDbContext _context;
+    protected RepositoryBase(ApplicationDbContext context) => _context = context;
+
+    public async Task<TEntity?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default) => 
+        await _context.Set<TEntity>().FindAsync(id, cancellationToken);
+
+    public async Task<IReadOnlyList<TEntity>> GetAllAsync(CancellationToken cancellationToken = default) => 
+        await _context.Set<TEntity>().ToListAsync(cancellationToken);
+
+    public async Task<Guid> CreateAsync(TEntity entity, CancellationToken cancellationToken = default)
+    {
+        await  _context.Set<TEntity>().AddAsync(entity, cancellationToken);
+        await _context.SaveChangesAsync(cancellationToken);
+
+        return entity.Id;
+    }
+
+    public async Task<bool> UpdateAsync(TEntity entity, CancellationToken cancellationToken = default)
+    {
+        _context.Set<TEntity>().Update(entity);
+        await _context.SaveChangesAsync(cancellationToken);
+
+        return true;
+    }
+
+    public async Task<bool> RemoveAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var entity = await GetByIdAsync(id, cancellationToken);
+        if (entity != null)
+        {
+            _context.Set<TEntity>().Remove(entity);
+        }
+        await _context.SaveChangesAsync(cancellationToken);
+
+        return true;
+    }
+}
+
+{{- else -}}
+
+public sealed class {{ name }} : RepositoryBase<{{feature}}>, I{{ name }}
+{
+    public {{ name }}(ApplicationDbContext context) : base(context) 
+    {
+    }
+}
+
+{{- end -}}

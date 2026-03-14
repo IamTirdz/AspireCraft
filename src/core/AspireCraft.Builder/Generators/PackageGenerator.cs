@@ -37,9 +37,9 @@ public sealed class PackageGenerator
                 foreach (var package in packageConfig.Packages)
                 {
                     var command = $"add package {package}";
-                    if (package.StartsWith("Microsoft."))
+                    if (package.StartsWith("Microsoft.") || package.StartsWith("Aspire."))
                     {
-                        command = $"add package {package} -v {versionPrefix}.*";
+                        command = $"add package {package} --version {versionPrefix}.*";
                     }
 
                     DotnetRunner.Run(command, fullPath);

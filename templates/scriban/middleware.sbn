@@ -39,7 +39,9 @@ public sealed class {{ name }} : IMiddleware
         };
 		
 		var baseMessage = "An unhandled exception has occurred.";
-		var errorResponse = ex.ErrorResponse ?? new ErrorResponse();
+		var errorResponse = ex is BaseException baseException
+            ? baseException.ErrorResponse!
+            : new ErrorResponse();
 		
 		if (errorResponse.Code == null) 
 		{
@@ -56,7 +58,7 @@ public sealed class {{ name }} : IMiddleware
             errorResponse.Message = baseMessage;
         }
 
-        var result = JsonSerializer.Serialize(ex.ErrorResponse);
+        var result = JsonSerializer.Serialize(errorResponse);
 
         httpContext.Response.ContentType = "application/json";
         httpContext.Response.StatusCode = (int)statusCode;

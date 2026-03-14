@@ -5,95 +5,256 @@ namespace AspireCraft.Builder.Generators;
 
 public sealed class MetadataGenerator
 {
-
     public void Generate(ProjectContext context, TemplateDefinition template)
     {
-        var featureName = "User";
+        var features = new List<string> { "Product", "Order" };
         var root = Path.GetDirectoryName(context.SolutionPath)!;
 
         foreach (var file in template.Metadata)
         {
-            var pathParts = file.Path.Replace("{{feature}}", $"{featureName}").Split('/');
-            var projectShortName = pathParts[0];
-
-            if (!context.ProjectPath.TryGetValue(projectShortName, out var projectPhysicalPath))
+            bool isFeature = file.Name.Contains("{{feature}}") || file.Path.Contains("{{feature}}");
+            if (isFeature)
             {
-                projectPhysicalPath = Path.Combine(root, "src", $"{context.ProjectName}.{projectShortName}");
+                foreach (var feature in features)
+                {
+                    RenderFile(file, context, root, feature);
+                }
             }
-
-            var internalPath = string.Join(Path.DirectorySeparatorChar, pathParts.Skip(1));
-            var folder = Path.Combine(projectPhysicalPath, internalPath);
-
-            var className = file.Name.Replace("{{feature}}", featureName);
-            var namespaceName = $"{context.ProjectName}.{file.Path.Replace("/", ".")}".Replace(".{{feature}}", $".{featureName}");
-
-            var model = new
+            else
             {
-                name = className,
-                @namespace = namespaceName,
-                feature = featureName,
-                type = file.Type,
-                usings = GetInheritance(file.Type, context.ProjectName)
-            };
-
-            var templatePath = Path.Combine("templates", file.Template);
-            var templateRenderer = new TemplateRenderer();
-            var result = templateRenderer.Render(templatePath, model);
-
-            if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
-
-            var outputFile = Path.Combine(folder, $"{className}.cs");
-            File.WriteAllText(outputFile, result);
+                RenderFile(file, context, root, "");
+            }
         }
     }
 
-    private static List<string> GetInheritance(string type, string projectName)
+    private void RenderFile(MetadataDefinition file, ProjectContext context, string root, string feature)
     {
-        var list = new List<string> { "System", "System.Collections.Generic", "System.Linq", "System.Text", "System.Threading.Tasks" };
+        var currentFeature = feature ?? string.Empty;
+        var targetFolder = ResolvePath(file, context, root, currentFeature);
+        var className = file.Name.Replace("{{feature}}", currentFeature);
+        var namespaceName = $"{context.ProjectName}.{file.Path.Replace("/", ".").Replace("{{feature}}", currentFeature)}";
+        var hostName = context.ProjectName.Replace(".", "_");
+        var projectName = context.ProjectName.Replace(".", " ");
 
-        switch (type)
+        var model = new
         {
-            case "controller":
-                list.Add("Microsoft.AspNetCore.Mvc");
-                list.Add("MediatR");
-                list.Add("System.Net");
-                list.Add("Asp.Versioning");
-                break;
-            case "middleware":
-                list.Add($"{projectName}.Application.Common.Exceptions");
-                list.Add($"{projectName}.Application.Common.Models");
-                list.Add("System.Diagnostics");
-                list.Add("System.Net");
-                list.Add("System.Text.Json");
-                break;
-            case "command":
-            case "query":
-                list.Add("MediatR");
-                break;
-            case "repository":
-                list.Add($"{projectName}.Domain.Interfaces");
-                list.Add($"{projectName}.Domain.Entities");
-                list.Add($"{projectName}.Infrastructure.Persistence.Contexts");
-                list.Add("Microsoft.EntityFrameworkCore");
-                break;
-            case "dbcontext":
-                list.Add($"{projectName}.Domain.Interfaces");
-                list.Add($"{projectName}.Domain.Entities");
-                list.Add("Microsoft.EntityFrameworkCore");
-                break;
-            case "profile":
-                list.Add($"{projectName}.Domain.Entities");
-                list.Add("AutoMapper");
-                break;
-            case "pipeline":
-                list.Add($"{projectName}.Application.Common.Models");
-                list.Add("MediatR");
-                list.Add("FluentValidation");
-                list.Add("System.Diagnostics");
-                list.Add("Microsoft.Extensions.Logging");
-                list.Add("System.Text.Json");
-                break;
+            name = className,
+            @namespace = namespaceName,
+            hostname = hostName,
+            projectname = projectName,
+            feature = currentFeature,
+            variant = file.Variant,
+            @base = file.Base ?? string.Empty,
+            usings = GetInheritance(file.Type, file.Variant, currentFeature, context.ProjectName),
+            database = context.Database.ToLower(),
+        };
+
+        var templatePath = Path.Combine("templates", file.Template);
+        var result = new TemplateRenderer().Render(templatePath, model);
+
+        if (!Directory.Exists(targetFolder))
+        {
+            Directory.CreateDirectory(targetFolder!);
         }
-        return list;
+
+        var outputFile = Path.Combine(targetFolder!, $"{className}.cs");
+        File.WriteAllText(outputFile, result);
+    }
+
+    private static string? ResolvePath(MetadataDefinition file, ProjectContext context, string root, string featureName)
+    {
+        var pathParts = file.Path.Replace("{{feature}}", featureName).Split('/');
+        var projectShortName = pathParts[0];
+
+        if (!context.ProjectPath.TryGetValue(projectShortName, out var projectPhysicalPath))
+        {
+            // Fallback: convention-based path
+            projectPhysicalPath = Path.Combine(root, "src", $"{context.ProjectName}.{projectShortName}");
+        }
+
+        var internalPath = string.Join(Path.DirectorySeparatorChar, pathParts.Skip(1));
+        return Path.Combine(projectPhysicalPath, internalPath);
+    }
+
+    private static List<string> GetInheritance(string type, string variant, string feature, string projectName)
+    {
+        var list = new List<string>();
+
+        var @using = type switch
+        {
+            "controller" =>
+                variant switch
+                {
+                    "base" =>
+                        new[]
+                        {
+                            "MediatR",
+                            "Asp.Versioning",
+                            "Microsoft.AspNetCore.Mvc",
+                        },
+                    "controller" =>
+                        new[]
+                        {
+                            "Asp.Versioning",
+                            "Microsoft.AspNetCore.Mvc",
+                            $"{projectName}.Application.{feature}s.Queries.Get{feature}s",
+                            $"{projectName}.Application.{feature}s.Commands.Create{feature}",
+                            $"{projectName}.Application.{feature}s.Queries.Get{feature}ById"
+                        },
+                    _ => Array.Empty<string>()
+                },
+            "middleware" =>
+                new[]
+                {
+                    $"{projectName}.Application.Common.Exceptions",
+                    $"{projectName}.Application.Common.Models",
+                    "System.Diagnostics",
+                    "System.Net",
+                    "System.Text.Json",
+                },
+            //"entity" =>
+            "repository" =>
+                variant switch
+                {
+                    "interface" =>
+                        new[]
+                        {
+                            $"{projectName}.Domain.Entities",
+                        },
+                    "base" =>
+                        new[]
+                        {
+                            $"{projectName}.Domain.Interfaces",
+                            $"{projectName}.Domain.Entities",
+                            "Microsoft.EntityFrameworkCore",
+                        },
+                    "implementation" =>
+                        new[]
+                        {
+                            $"{projectName}.Domain.Interfaces",
+                            $"{projectName}.Domain.Entities",
+                        },
+                    _ => Array.Empty<string>()
+                },
+            "dbcontext" =>
+                new[]
+                {
+                    $"{projectName}.Domain.Interfaces",
+                    $"{projectName}.Domain.Entities",
+                    "Microsoft.EntityFrameworkCore",
+                    "Microsoft.AspNetCore.Identity.EntityFrameworkCore",
+                    "Microsoft.AspNetCore.Identity",
+                    "System.Reflection",
+                    $"{projectName}.Infrastructure.Identity",
+                },
+            "class" =>
+                variant switch
+                {
+                    "command" or
+                    "queries" =>
+                        new[]
+                        {
+                            "MediatR",
+                        },
+                    "query" =>
+                        new[]
+                        {
+                            "MediatR",
+                             $"{projectName}.Application.{feature}s.Queries.Get{feature}s"
+                        },
+                    "profile" =>
+                        new[]
+                        {
+                            "AutoMapper",
+                            $"{projectName}.Domain.Entities",
+                            $"{projectName}.Application.{feature}s.Queries.Get{feature}s"
+                        },
+                    _ => Array.Empty<string>()
+                },
+            "pipeline" =>
+                 new[] {
+                    $"{projectName}.Application.Common.Models",
+                    "MediatR",
+                    "FluentValidation",
+                    "System.Diagnostics",
+                    "Microsoft.Extensions.Logging",
+                    "System.Text.Json",
+                 },
+            "model" =>
+                variant switch
+                {
+                    "user-identity" or
+                    "role-identity" =>
+                        new[]
+                        {
+                            "Microsoft.AspNetCore.Identity",
+                        },
+                    _ => Array.Empty<string>()
+                },
+            "exception" =>
+                 new[] {
+                    $"{projectName}.Application.Common.Models",
+                 },
+            "program" =>
+                variant switch
+                {
+                    "host" =>
+                        new[]
+                        {
+                            "Microsoft.Extensions.Configuration",
+                            "Microsoft.Extensions.DependencyInjection",
+                            "Microsoft.Extensions.Hosting"
+                        },
+                    "api" =>
+                        new[]
+                        {
+                            "Microsoft.Extensions.Hosting",
+                            $"{projectName}.API.Middlewares",
+                            $"{projectName}.API",
+                            $"{projectName}.Application",
+                            $"{projectName}.Infrastructure"
+                        },
+                    _ => Array.Empty<string>()
+                },
+            "dependency-injection" =>
+                variant switch
+                {
+                    "api" =>
+                        new[]
+                        {
+                            "Asp.Versioning",
+                            "Microsoft.AspNetCore.HttpLogging",
+                            "Microsoft.AspNetCore.Mvc",
+                            "Microsoft.AspNetCore.ResponseCompression",
+                            "NSwag",
+                            "NSwag.Generation.Processors.Security",
+                            $"{projectName}.API.Middlewares"
+                        },
+                    "application" =>
+                        new[]
+                        {
+                            "AutoMapper",
+                            "System.Reflection",
+                            $"{projectName}.Domain.Entities",
+                            "Microsoft.Extensions.Hosting",
+                            "FluentValidation",
+                            "Microsoft.Extensions.DependencyInjection",
+                            "MediatR",
+                            $"{projectName}.Application.Common.Behaviors"
+                        },
+                    "infrastructure" =>
+                        new[]
+                        {
+                            $"{projectName}.Infrastructure.Persistence",
+                            "Microsoft.Extensions.Hosting",
+                            "Microsoft.Extensions.DependencyInjection"
+                        },
+                    _ => Array.Empty<string>()
+                },
+            _ => Array.Empty<string>()
+        };
+
+        list.AddRange(@using);
+        return list.Distinct().ToList();
     }
 }

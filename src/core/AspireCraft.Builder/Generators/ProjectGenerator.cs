@@ -29,7 +29,14 @@ public sealed class ProjectGenerator
             }
 
             Directory.CreateDirectory(fullPath);
-            DotnetRunner.Run($"new {project.Type} -n {name} -f {framework} -o .", fullPath);
+            DotnetRunner.Run($"new {project.Type} -n {name} --framework {framework} -o .", fullPath);
+
+            var deleteDefaults = new[] { "Program.cs", "Class1.cs", "AppHost.cs", "UnitTest1.cs" };
+            foreach (var file in deleteDefaults)
+            {
+                var generatedPath = Path.Combine(fullPath, file);
+                if (File.Exists(generatedPath)) File.Delete(generatedPath);
+            }
 
             var csproj = Path.Combine(fullPath, $"{name}.csproj");
             DotnetRunner.Run($"sln add {csproj}", root);

@@ -49,69 +49,66 @@ public sealed class CreateProjectCommand : Command<CreateProjectCommand.Settings
                 .AddColumn(new TableColumn("Icon").Padding(0, 0, 0, 0))
                 .AddColumn(new TableColumn("Status").Padding(0, 0, 0, 0));
 
+            var label = "[grey]│[/] ";
+            var currentStep = 0;
+            var steps = new List<string>
+            {
+                "Creating solution",
+                "Generating projects",
+                "Applying references",
+                "Adding packages",
+                 "Building template",
+            };
+
+            foreach (var step in steps)
+            {
+                table.AddRow(label, step);
+            }
+
             AnsiConsole.MarkupLine("[grey]│[/] ");
             AnsiConsole.Live(table)
                 .Start(ctx =>
                 {
-                    void SetInProgress(int row, string label)
+                    int GetIndex(string label) => steps.IndexOf(label);
+
+                    void SetStatus(string label, string icon, string color, string status)
                     {
-                        table.UpdateCell(row, 0, "[yellow]○[/]");
-                        table.UpdateCell(row, 1, $"[yellow]{label} - Running...[/]");
+                        int row = GetIndex(label);
+                        table.UpdateCell(row, 0, $"[{color}]{Markup.Escape(icon)}[/]");
+                        table.UpdateCell(row, 1, $"[{color}]{Markup.Escape(label)} - {Markup.Escape(status)}[/]");
                         ctx.Refresh();
                     }
-
-                    void SetCompleted(int row, string label)
-                    {
-                        table.UpdateCell(row, 0, "[green]✔[/]");
-                        table.UpdateCell(row, 1, $"[green]{label} - Done[/]");
-                        ctx.Refresh();
-                    }
-
-                    void SetFailed(int row, string label, string error)
-                    {
-                        table.UpdateCell(row, 0, "[red]✘[/]");
-                        table.UpdateCell(row, 1, $"[red]{label} - Failed[/]");
-                        ctx.Refresh();
-                    }
-
-                    var iconLabel = "[grey]│[/] ";
-                    var templateTask = "Building template";
-                    var solutiontask = "Creating solution";
-                    var projectTask = "Generating projects";
-                    var referenceTask = "Applying references";
-                    var packageTask = "Adding nuget packages";
-
-                    table.AddRow(iconLabel, templateTask);
-                    table.AddRow(iconLabel, solutiontask);
-                    table.AddRow(iconLabel, projectTask);
-                    table.AddRow(iconLabel, referenceTask);
-                    ctx.Refresh();
 
                     try
                     {
-                        SetInProgress(0, solutiontask);
+                        currentStep = GetIndex("Creating solution");
+                        SetStatus(steps[currentStep], "○", "yellow", "Running...");
                         projectInfo.SolutionPath = solutionGenerator.Create(projectInfo.ProjectName, GetOutputPath());
-                        SetCompleted(0, solutiontask);
+                        SetStatus(steps[currentStep], "✔", "green", "Done");
 
-                        SetInProgress(1, projectTask);
+                        currentStep = GetIndex("Generating projects");
+                        SetStatus(steps[currentStep], "○", "yellow", "Running...");
                         projectGenerator.Generate(projectInfo, template);
-                        SetCompleted(1, projectTask);
+                        SetStatus(steps[currentStep], "✔", "green", "Done");
 
-                        SetInProgress(2, referenceTask);
+                        currentStep = GetIndex("Applying references");
+                        SetStatus(steps[currentStep], "○", "yellow", "Running...");
                         referenceGenerator.ApplyReferences(projectInfo, template);
-                        SetCompleted(2, referenceTask);
+                        SetStatus(steps[currentStep], "✔", "green", "Done");
 
-                        SetInProgress(3, packageTask);
+                        currentStep = GetIndex("Adding packages");
+                        SetStatus(steps[currentStep], "○", "yellow", "Installing...");
                         packageGenerator.Generate(projectInfo, template);
-                        SetCompleted(3, packageTask);
+                        SetStatus(steps[currentStep], "✔", "green", "Done");
 
-                        SetInProgress(4, templateTask);
+                        currentStep = GetIndex("Building template");
+                        SetStatus(steps[currentStep], "○", "yellow", "Generating...");
                         templateGenerator.Generate(projectInfo, template);
-                        SetCompleted(4, templateTask);
+                        SetStatus(steps[currentStep], "✔", "green", "Done");
                     }
                     catch (Exception ex)
                     {
-                        SetFailed(0, solutiontask, ex.Message);
+                        SetStatus(steps[currentStep], "✘", "red", $"Failed: {ex.Message}");
                         throw;
                     }
                 });

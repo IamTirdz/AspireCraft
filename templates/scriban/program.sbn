@@ -1,0 +1,80 @@
+﻿{{ for item in usings ~}}
+using {{ item }};
+{{ end ~}}
+
+{{ if variant == "host" -}}
+var builder = DistributedApplication.CreateBuilder(args);
+
+{{- dbtype = database | string.downcase -}}
+{{- case dbtype -}}
+{{- when "sqlserver" -}}
+var sqlServer = builder.AddSqlServer("sqlserver");
+var database = sqlServer.AddDatabase("appdb");
+{{- when "postgresql" -}}
+var postgres = builder.AddPostgres("postgres")
+    .WithPgAdmin();
+var database = postgres.AddDatabase("appdb");
+{{- when "mysql" -}}
+var mysql = builder.AddMySql("mysql")
+    .WithPhpMyAdmin();
+var database = mysql.AddDatabase("appdb");
+{{- end -}}
+
+var redis = builder.AddRedis("redis");
+
+builder.AddProject<Projects.{{hostname}}_API>("api-service")
+    .WithReference(redis)
+    .WithReference(database);
+
+var host = builder.Build();
+await host.RunAsync();
+
+{{- else -}}
+
+var builder = WebApplication.CreateBuilder(args);
+
+// Add Aspire Service Defaults for telemetry and health checks
+builder.AddServiceDefaults();
+
+// Add services to the container.
+builder.AddInfrastructureServices();
+builder.AddApplicationServices();
+builder.AddApiEndpointServices();
+
+var app = builder.Build();
+
+app.MapDefaultEndpoints();
+
+app.UseHttpLogging();
+app.UseResponseCompression();
+app.UseMiddleware<ExceptionHandlingMiddleware>();
+
+
+// Configure the HTTP request pipeline.
+if (app.Environment.IsDevelopment())
+{
+    app.MapGet("/", () => Results.Redirect("/swagger/ui"))
+       .ExcludeFromDescription();
+
+    app.UseOpenApi(options =>
+    {
+        options.Path = "swagger/{documentName}/swagger.json";
+    });
+
+    app.UseSwaggerUi(s =>
+    {
+        s.DocumentPath = "swagger/{documentName}/swagger.json";
+        s.Path = "/swagger/ui";
+    });
+}
+
+app.UseHttpsRedirection();
+
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.MapControllers();
+
+await app.RunAsync();
+
+{{- end -}}

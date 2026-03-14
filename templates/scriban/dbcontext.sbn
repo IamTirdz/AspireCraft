@@ -1,0 +1,45 @@
+{{ for item in usings ~}}
+using {{ item }};
+{{ end ~}}
+
+namespace {{ namespace }};
+
+public sealed class {{ name }} : IdentityDbContext<
+    ApplicationUser,
+    ApplicationRole,
+    Guid,
+    IdentityUserClaim<Guid>,
+    IdentityUserRole<Guid>,
+    IdentityUserLogin<Guid>,
+    IdentityRoleClaim<Guid>,
+    IdentityUserToken<Guid>>
+{
+    public {{ name }}(DbContextOptions options) : base(options)
+    {
+    }
+
+     protected override void OnModelCreating(ModelBuilder builder)
+    {
+        base.OnModelCreating(builder);
+
+        // Users
+        builder.Entity<ApplicationUser>().ToTable("Users");
+        builder.Entity<ApplicationUser>().Property(u => u.Id).ValueGeneratedOnAdd();
+        builder.Entity<ApplicationUser>().HasIndex(u => u.Email).IsUnique();
+        builder.Entity<ApplicationUser>().Property(u => u.Email).HasMaxLength(256);
+        builder.Entity<ApplicationUser>().Property(u => u.CreatedAt).HasDefaultValueSql("NOW()").ValueGeneratedOnAdd();
+        builder.Entity<ApplicationUser>().Property(u => u.UpdatedAt).HasDefaultValueSql("NOW()").ValueGeneratedOnAddOrUpdate();
+        
+        // Roles
+        builder.Entity<ApplicationRole>().ToTable("Roles");
+        builder.Entity<ApplicationRole>().Property(r => r.Id).ValueGeneratedOnAdd();
+
+        builder.Entity<IdentityUserRole<Guid>>().ToTable("UserRoles");
+        builder.Entity<IdentityUserClaim<Guid>>().ToTable("UserClaims");
+        builder.Entity<IdentityUserLogin<Guid>>().ToTable("UserLogins");
+        builder.Entity<IdentityUserToken<Guid>>().ToTable("UserTokens");
+        builder.Entity<IdentityRoleClaim<Guid>>().ToTable("RoleClaims");
+
+        builder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
+    }
+}

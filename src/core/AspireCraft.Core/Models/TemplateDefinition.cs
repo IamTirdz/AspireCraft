@@ -36,6 +36,8 @@ public sealed class MetadataDefinition
     public string Name { get; set; } = string.Empty;
     public string Template { get; set; } = string.Empty;
     public string Path { get; set; } = string.Empty;
+    public string Variant { get; set; } = string.Empty;
+    public string Base { get; set; } = string.Empty;
     public string Type { get; set; } = string.Empty;
 }
 

@@ -115,7 +115,8 @@
         "FluentValidation.DependencyInjectionExtensions",
         "MediatR",
         "Microsoft.Extensions.DependencyInjection",
-        "Microsoft.Extensions.Configuration"
+        "Microsoft.Extensions.Configuration",
+		"Microsoft.Extensions.Hosting"
       ]
     },
     {
@@ -123,7 +124,10 @@
       "packages": [
         "Microsoft.EntityFrameworkCore.SqlServer",
         "Microsoft.EntityFrameworkCore.Tools",
-        "Microsoft.AspNetCore.Identity.EntityFrameworkCore"
+        "Microsoft.AspNetCore.Identity.EntityFrameworkCore",
+		"Microsoft.Extensions.Hosting",
+		"Aspire.Npgsql.EntityFrameworkCore.PostgreSQL",
+		"Aspire.StackExchange.Redis"
       ]
     },
     {
@@ -132,165 +136,284 @@
         "Moq",
         "FluentAssertions"
       ]
+    },
+	{
+      "project": "IntegrationTests",
+      "packages": [
+        "Moq",
+        "FluentAssertions"
+      ]
+    },
+	{
+      "project": "ArchitectureTests",
+      "packages": [
+        "Moq",
+        "FluentAssertions"
+      ]
+    },
+	{
+      "project": "AppHost",
+      "packages": [
+		"Aspire.Hosting.AppHost",        
+        "Aspire.Hosting.Redis",
+		"Aspire.Hosting.PostgreSQL",
+		"Aspire.Hosting.SqlServer",
+		"Aspire.Hosting.MySql"
+      ]
     }
   ],
   "metadata": [
     {
+      "name": "Program",
+      "template": "scriban/program.sbn",
+      "variant": "host",
+      "path": "AppHost",
+	  "type": "program"
+    },
+    {
+      "name": "Program",
+      "template": "scriban/program.sbn",
+      "variant": "api",
+      "path": "API",
+	  "type": "program"
+    },
+    {
       "name": "ExceptionHandlingMiddleware",
-      "template": "class/middleware.scriban",
+      "template": "scriban/middleware.sbn",
       "path": "API/Middlewares",
-      "type": "base"
+	  "type": "middleware"
     },
     {
       "name": "ApiControllerBase",
-      "template": "class/controller.scriban",
+      "template": "scriban/controller.sbn",
+      "variant": "base",
       "path": "API/Controllers",
-      "type": "base"
+	  "type": "controller"
     },
+	{
+	  "name": "ConfigureServices",
+	  "template": "scriban/dependency-injection.sbn",
+	  "variant": "api",
+	  "path": "API"  ,
+	  "type": "dependency-injection"
+	},
     {
       "name": "{{feature}}sController",
-      "template": "class/class.scriban",
+      "template": "scriban/controller.sbn",
+      "variant": "controller",
       "path": "API/Controllers/v1",
-      "type": "controller"
+      "base": "ApiControllerBase",
+	  "type": "controller"
+    },
+	{
+      "name": "BaseEntity",
+      "template": "scriban/entity.sbn",
+      "variant": "base",
+      "path": "Domain/Entities",
+	  "type": "entity"
     },
     {
-      "name": "BaseEntity",
-      "template": "class/entity.scriban",
+      "name": "AuditableEntity",
+      "template": "scriban/entity.sbn",
+      "variant": "auditable",
       "path": "Domain/Entities",
-      "type": "base"
+	  "type": "entity"
     },
     {
       "name": "{{feature}}",
-      "template": "class/class.scriban",
+      "template": "scriban/entity.sbn",
+      "variant": "entity",
       "path": "Domain/Entities",
-      "type": "entity"
+      "base": "AuditableEntity",
+	  "type": "entity"
+    },
+    {
+      "name": "IRepository",
+      "template": "scriban/repository.sbn",
+      "variant": "base-interface",
+      "path": "Domain/Interfaces",
+	  "type": "repository"
+    },
+    {
+      "name": "RepositoryBase",
+      "template": "scriban/repository.sbn",
+      "variant": "base",
+      "path": "Infrastructure/Persistence/Repositories",
+      "base": "IRepository",
+	  "type": "repository"
     },
     {
       "name": "I{{feature}}Repository",
-      "template": "class/class.scriban",
+      "template": "scriban/repository.sbn",
+      "variant": "interface",
       "path": "Domain/Interfaces",
-      "type": "interface"
+	  "type": "repository"
     },
     {
       "name": "{{feature}}Repository",
-      "template": "class/class.scriban",
+      "template": "scriban/repository.sbn",
+      "variant": "implementation",
       "path": "Infrastructure/Persistence/Repositories",
-      "type": "repository"
-    },
-	{
-      "name": "IGenericRepository",
-      "template": "class/repository.scriban",
-      "path": "Domain/Interfaces",
-      "type": "interface"
-    },
-    {
-      "name": "GenericRepository",
-      "template": "class/repository.scriban",
-      "path": "Infrastructure/Persistence/Repositories",
-      "type": "base"
-    },
+	  "type": "repository"
+    },    
     {
       "name": "ApplicationDbContext",
-      "template": "class/class.scriban",
-      "path": "Infrastructure/Persistence/Contexts",
-      "type": "dbcontext"
+      "template": "scriban/dbcontext.sbn",
+      "path": "Infrastructure/Persistence",
+	  "type": "dbcontext"
     },
-    {
-      "name": "Create{{feature}}Command",
-      "template": "class/class.scriban",
-      "path": "Application/{{feature}}s/Commands/Create{{feature}}",
-      "type": "command"
-    },
-    {
-      "name": "Create{{feature}}Dto",
-      "template": "class/class.scriban",
-      "path": "Application/{{feature}}s/Commands/Create{{feature}}",
-      "type": "dto"
-    },
-    {
-      "name": "Get{{feature}}sQuery",
-      "template": "class/class.scriban",
-      "path": "Application/{{feature}}s/Queries/Get{{feature}}s",
-      "type": "query"
-    },
-    {
-      "name": "{{feature}}Dto",
-      "template": "class/class.scriban",
-      "path": "Application/{{feature}}s/Queries/Get{{feature}}s",
-      "type": "dto"
-    },
-    {
-      "name": "Get{{feature}}ByIdQuery",
-      "template": "class/class.scriban",
-      "path": "Application/{{feature}}s/Queries/Get{{feature}}ById",
-      "type": "query"
-    },
+	{
+	  "name": "ConfigureServices",
+	  "template": "scriban/dependency-injection.sbn",
+	  "variant": "infrastructure",
+	  "path": "Infrastructure"	  ,
+	  "type": "dependency-injection"
+	},
     {
       "name": "{{feature}}Profile",
-      "template": "class/class.scriban",
+      "template": "scriban/class.sbn",
+	  "variant": "profile",
       "path": "Application/Mappings",
-      "type": "profile"
-    },
-    {
-      "name": "ErrorResponse",
-      "template": "class/class.scriban",
-      "path": "Application/Common/Models",
-      "type": "dto"
+	  "type": "class"
     },
     {
       "name": "LoggingBehavior",
-      "template": "class/logging.scriban",
+      "template": "scriban/pipeline.sbn",
+      "variant": "logging",
       "path": "Application/Common/Behaviors",
-      "type": "pipeline"
+	  "type": "pipeline"
     },
     {
       "name": "ValidationBehavior",
-      "template": "class/validation.scriban",
+      "template": "scriban/pipeline.sbn",
+      "variant": "validation",
       "path": "Application/Common/Behaviors",
-      "type": "pipeline"
+	  "type": "pipeline"
     },
     {
       "name": "PerformanceBehavior",
-      "template": "class/performance.scriban",
+      "template": "scriban/pipeline.sbn",
+      "variant": "performance",
       "path": "Application/Common/Behaviors",
-      "type": "pipeline"
+	  "type": "pipeline"
+    },
+    {
+      "name": "AuthorizationBehavior",
+      "template": "scriban/pipeline.sbn",
+      "variant": "behavior",
+      "path": "Application/Common/Behaviors",
+	  "type": "pipeline"
+    },
+    {
+      "name": "ErrorResponse",
+      "template": "scriban/model.sbn",
+      "variant": "error",
+      "path": "Application/Common/Models",
+	  "type": "model"
+    },
+    {
+      "name": "PaginatedResponse",
+      "template": "scriban/model.sbn",
+      "variant": "pagination",
+      "path": "Application/Common/Models",
+	  "type": "model"
+    },
+	{
+      "name": "ApplicationUser",
+      "template": "scriban/model.sbn",
+      "variant": "user-identity",
+      "path": "Infrastructure/Identity",
+	  "type": "model"
+    },
+	{
+      "name": "ApplicationRole",
+      "template": "scriban/model.sbn",
+      "variant": "role-identity",
+      "path": "Infrastructure/Identity",
+	  "type": "model"
     },
     {
       "name": "BaseException",
-      "template": "class/exception.scriban",
+      "template": "scriban/exception.sbn",
+      "variant": "base",
       "path": "Application/Common/Exceptions",
-      "type": "base"
+	  "type": "exception"
     },
     {
       "name": "BadRequestException",
-      "template": "class/class.scriban",
+      "template": "scriban/exception.sbn",
+      "variant": "implementation",
       "path": "Application/Common/Exceptions",
-      "type": "exception"
+	  "type": "exception",
+	  "base": "BaseException"
     },
     {
       "name": "NotFoundException",
-      "template": "class/class.scriban",
+      "template": "scriban/exception.sbn",
+      "variant": "implementation",
       "path": "Application/Common/Exceptions",
-      "type": "exception"
+	  "type": "exception",
+	  "base": "BaseException"
     },
     {
       "name": "ForbiddenException",
-      "template": "class/class.scriban",
+      "template": "scriban/exception.sbn",
+      "variant": "implementation",
       "path": "Application/Common/Exceptions",
-      "type": "exception"
+	  "type": "exception",
+	  "base": "BaseException"
     },
     {
       "name": "UnauthorizedException",
-      "template": "class/class.scriban",
+      "template": "scriban/exception.sbn",
+      "variant": "implementation",
       "path": "Application/Common/Exceptions",
-      "type": "exception"
+	  "type": "exception",
+	  "base": "BaseException"
     },
     {
       "name": "ValidationException",
-      "template": "class/class.scriban",
+      "template": "scriban/exception.sbn",
+      "variant": "implementation",
       "path": "Application/Common/Exceptions",
-      "type": "exception"
-    }
+	  "type": "exception",
+	  "base": "BaseException"
+    },
+    {
+      "name": "Create{{feature}}Command",
+      "template": "scriban/class.sbn",
+      "variant": "command",
+      "path": "Application/{{feature}}s/Commands/Create{{feature}}",
+	  "type": "class"
+    },
+    {
+      "name": "Get{{feature}}sQuery",
+      "template": "scriban/class.sbn",
+      "variant": "queries",
+      "path": "Application/{{feature}}s/Queries/Get{{feature}}s",
+	  "type": "class"
+    },
+    {
+      "name": "Get{{feature}}ByIdQuery",
+      "template": "scriban/class.sbn",
+      "variant": "query",
+      "path": "Application/{{feature}}s/Queries/Get{{feature}}ById",
+	  "type": "class"
+    },
+    {
+      "name": "{{feature}}Dto",
+      "template": "scriban/class.sbn",
+      "variant": "dto",
+      "path": "Application/{{feature}}s/Queries/Get{{feature}}s",
+	  "type": "class"
+    },
+	{
+	  "name": "ConfigureServices",
+	  "template": "scriban/dependency-injection.sbn",
+	  "variant": "application",
+	  "path": "Application"	  ,
+	  "type": "dependency-injection"
+	}
   ],
   "services": [
     {

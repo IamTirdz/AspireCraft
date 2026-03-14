@@ -20,7 +20,7 @@ public static class DotnetRunner
             }
         };
 
-        process.StartInfo.EnvironmentVariables["DOTNET_INTERACTIVE"] = "false";
+        ///process.StartInfo.EnvironmentVariables["DOTNET_INTERACTIVE"] = "false";
 
         process.Start();
 
@@ -37,5 +37,27 @@ public static class DotnetRunner
         {
             throw new Exception($"Dotnet CLI Error: {error} \nOutput: {output}")!;
         }
+    }
+
+    public static string GetLatestSdkVersion(string targetVersion)
+    {
+        var startInfo = new ProcessStartInfo
+        {
+            FileName = "dotnet",
+            Arguments = "--list-sdks",
+            RedirectStandardOutput = true,
+            UseShellExecute = false,
+            CreateNoWindow = true
+        };
+
+        using var process = Process.Start(startInfo);
+        var output = process?.StandardOutput.ReadToEnd() ?? "";
+        process?.WaitForExit();
+
+        return output.Split('\n')
+            .Select(line => line.Split('[')[0].Trim())
+            .Where(v => v.StartsWith(targetVersion))
+            .OrderByDescending(v => v)
+            .FirstOrDefault() ?? "";
     }
 }

@@ -4,6 +4,8 @@ using {{ item }};
 
 namespace {{ namespace }};
 
+{{ if variant == "base" -}}
+
 [Serializable]
 public abstract class {{ name }} : Exception
 {
@@ -16,8 +18,31 @@ public abstract class {{ name }} : Exception
     public {{ name }}(string name, object key) 
         : base($"Entity \"{name}\" ({key}) was not found.") { }
 
-    public {{ name }}(ErrorResponse errorResponse = null) : base(errorResponse) 
+    public {{ name }}(ErrorResponse errorResponse)
     { 
         ErrorResponse = errorResponse ?? new ErrorResponse();
     }
 }
+
+{{- else -}}
+
+public class {{ name }} : {{ base | object.default "Exception" }}
+{
+    public {{ name }}()
+    {
+    }
+
+    public {{ name }}(string message) : base(message)
+    {
+    }
+
+    public {{ name }}(string name, object key) : base(name, key)
+    {
+    }
+
+    public {{ name }}(ErrorResponse errorResponse) : base(errorResponse)
+    {
+    }
+}
+
+{{- end -}}

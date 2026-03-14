@@ -1,0 +1,86 @@
+{{ for item in usings ~}}
+using {{ item }};
+{{ end ~}}
+
+namespace {{ namespace }};
+
+{{ case variant -}}
+{{- when "interface" -}}
+
+public interface {{ name }}
+{
+}
+
+{{- when "command" -}}
+
+public record {{ name }} : IRequest<Guid>
+{
+}
+
+public sealed class {{ name }}Handler : IRequestHandler<{{ name }}, Guid>
+{
+    public {{ name }}Handler()
+    {
+    }
+
+    public async Task<Guid> Handle({{ name }} request, CancellationToken cancellationToken)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+{{- when "query" -}}
+
+public record {{ name }}(Guid {{ feature }}Id) : IRequest<{{ feature }}Dto>
+{
+}
+
+public sealed class {{ name }}Handler : IRequestHandler<{{ name }}, {{ feature }}Dto>
+{
+    public {{ name }}Handler()
+    {
+    }
+
+    public async Task<{{ feature }}Dto> Handle({{ name }} request, CancellationToken cancellationToken)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+{{- when "queries" -}}
+
+public record {{ name }} : IRequest<IReadOnlyList<{{ feature }}Dto>>
+{
+}
+
+public sealed class {{ name }}Handler : IRequestHandler<{{ name }}, IReadOnlyList<{{ feature }}Dto>>
+{
+    public {{ name }}Handler()
+    {
+    }
+
+    public async Task<IReadOnlyList<{{ feature }}Dto>> Handle({{ name }} request, CancellationToken cancellationToken)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+{{- when "dto" -}}
+
+public sealed class {{ name }}
+{
+    public Guid Id { get; set; }
+    public string Name { get; set; } = string.Empty;
+}
+
+{{- when "profile" -}}
+
+public sealed class {{ name }} : Profile 
+{ 
+    public {{ name }}() 
+    {
+        CreateMap<{{ feature }}, {{ feature }}Dto>().ReverseMap();
+    }
+}
+
+{{- end -}}
