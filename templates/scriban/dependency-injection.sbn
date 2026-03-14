@@ -1,0 +1,143 @@
+{{ for item in usings ~}}
+using {{ item }};
+{{ end ~}}
+
+namespace {{ namespace }};
+
+{{ case variant -}}
+{{- when "api" -}}
+
+public static class {{ name }} {
+    public static IHostApplicationBuilder AddApiEndpointServices(this IHostApplicationBuilder builder)
+    {
+        builder.Services.AddControllers();
+        builder.Services.AddHttpClient();
+        builder.Services.AddHttpContextAccessor();
+
+        builder.Services.AddResponseCompression(options =>
+        {
+            options.EnableForHttps = true;
+            options.Providers.Add<BrotliCompressionProvider>();
+            options.Providers.Add<GzipCompressionProvider>();
+        });
+
+        builder.Services.AddHttpLogging(logs =>
+        {
+            logs.LoggingFields = HttpLoggingFields.All;
+            logs.RequestBodyLogLimit = 4096;
+            logs.ResponseBodyLogLimit = 4096;
+            logs.CombineLogs = true;
+        });
+
+        builder.Services.AddScoped<ExceptionHandlingMiddleware>();
+
+        // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+        builder.Services.AddSwaggerDocument(document =>
+        {
+            document.Title = "{{projectname}} API";
+            document.Version = "v1";
+            document.DocumentProcessors.Add(
+                new SecurityDefinitionAppender("JWT Token", new OpenApiSecurityScheme
+                {
+                    Name = "Authorization",
+                    Type = OpenApiSecuritySchemeType.Http,
+                    Description = "JWT Token",
+                    Scheme = "Bearer",
+                    BearerFormat = "JWT",
+                    In = OpenApiSecurityApiKeyLocation.Header
+                })
+            );
+            document.OperationProcessors.Add(new OperationSecurityScopeProcessor("JWT Token"));
+        });
+
+        builder.Services.Configure<RouteOptions>(options =>
+        {
+            options.LowercaseUrls = true;
+            options.LowercaseQueryStrings = true;
+        });
+
+        builder.Services.Configure<ApiBehaviorOptions>(options =>
+        {
+            options.SuppressModelStateInvalidFilter = true;
+            options.InvalidModelStateResponseFactory = context =>
+            {
+                return new ObjectResult(new { error = "Invalid request media type." })
+                {
+                    StatusCode = StatusCodes.Status415UnsupportedMediaType
+                };
+            };
+        });
+
+        builder.Services
+            .AddApiVersioning(options =>
+            {
+                options.DefaultApiVersion = new ApiVersion(1, 0);
+                options.ReportApiVersions = true;
+                options.AssumeDefaultVersionWhenUnspecified = true;
+
+                options.ApiVersionReader = ApiVersionReader.Combine(new UrlSegmentApiVersionReader(),
+                    new HeaderApiVersionReader("x-api-version"),
+                    new MediaTypeApiVersionReader("x-api-version"));
+            })
+            .AddApiExplorer(options =>
+            {
+                options.GroupNameFormat = "'v'VVV";
+                options.SubstituteApiVersionInUrl = true;
+            });
+
+        {{- for item in metadata -}}
+        {{- if item.variant == "implementation" -}}
+        builder.Services.AddScoped<I{{ item.name }}, {{ item.name }}>();
+        {{- end -}}
+        {{- end }}
+
+        return builder;
+    }
+}
+
+{{- when "application" -}}
+
+public static class {{ name }} {
+    public static IHostApplicationBuilder AddApplicationServices(this IHostApplicationBuilder builder)
+    {
+        builder.Services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
+        builder.Services.AddAutoMapper(config => { }, Assembly.GetExecutingAssembly());
+
+        builder.Services.AddMediatR(config =>
+        {
+            config.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly());
+            config.AddBehavior(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
+            config.AddBehavior(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>));
+            config.AddBehavior(typeof(IPipelineBehavior<,>), typeof(PerformanceBehavior<,>));
+        });
+
+        {{- for item in metadata -}}
+        {{- if item.variant == "implementation" -}}
+        builder.Services.AddScoped<I{{ item.name }}, {{ item.name }}>();
+        {{- end -}}
+        {{- end }}
+
+        return builder;
+    }
+}
+
+{{- when "infrastructure" -}}
+
+public static class {{ name }} {
+    public static IHostApplicationBuilder AddInfrastructureServices(this IHostApplicationBuilder builder)
+    {
+        builder.AddNpgsqlDbContext<ApplicationDbContext>("appdb");
+
+        builder.AddRedisClient("redis");
+
+        {{- for item in metadata -}}
+        {{- if item.variant == "implementation" -}}
+        builder.Services.AddScoped<I{{ item.name }}, {{ item.name }}>();
+        {{- end -}}
+        {{- end }}
+
+        return builder;
+    }
+}
+
+{{- end -}}

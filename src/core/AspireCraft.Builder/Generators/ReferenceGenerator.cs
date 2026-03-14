@@ -9,8 +9,11 @@ public sealed class ReferenceGenerator
     {
         foreach (var reference in template.Dependencies)
         {
-            var projectPath = context.ProjectPath[reference.Project];
-            var dependencyPath = context.ProjectPath[reference.Dependency];
+            if (!context.ProjectPath.TryGetValue(reference.Project, out var projectPath) ||
+                !context.ProjectPath.TryGetValue(reference.Dependency, out var dependencyPath))
+            {
+                continue;
+            }
 
             var dependencyProj = Directory.GetFiles(dependencyPath, "*.csproj").FirstOrDefault();
 

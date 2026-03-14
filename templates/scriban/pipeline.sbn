@@ -1,0 +1,106 @@
+{{ for item in usings ~}}
+using {{ item }};
+{{ end ~}}
+
+namespace {{ namespace }};
+
+{{ case variant -}}
+{{- when "logging" -}}
+
+public sealed class {{ name }}<TRequest, TResponse>
+    : IPipelineBehavior<TRequest, TResponse> where TRequest
+    : IRequest<TResponse>
+{
+    private readonly ILogger<{{ name }}<TRequest, TResponse>> _logger;
+
+    public {{ name }}(ILogger<{{ name }}<TRequest, TResponse>> logger)
+    {
+        _logger = logger;
+    }
+
+    public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
+    {
+        _logger.LogInformation("Request: {Request}", typeof(TRequest).Name);
+        var response = await next();
+        _logger.LogInformation("Response: {Response}", JsonSerializer.Serialize(response));
+
+        return response;
+    }
+}
+
+{{- when "validation" -}}
+
+public class {{ name }}<TRequest, TResponse>(IEnumerable<IValidator<TRequest>> validators)
+    : IPipelineBehavior<TRequest, TResponse> where TRequest
+    : IRequest<TResponse>
+{
+    public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
+    {
+        if (!validators.Any()) return await next();
+
+        var context = new ValidationContext<TRequest>(request);
+
+        var validationResults = await Task.WhenAll(validators
+            .Select(v => v.ValidateAsync(context, cancellationToken)));
+
+        var failures = validationResults
+            .Where(e => e.Errors.Count != 0)
+            .SelectMany(r => r.Errors)
+            .ToList();
+
+        var errors = failures
+            .GroupBy(e => e.PropertyName, e => e.ErrorMessage)
+            .ToDictionary(g => g.Key, g => g.ToArray());
+
+        if (failures.Any())
+            throw new Exceptions.ValidationException(new ErrorResponse
+            {
+                Message = "One or more validation failures have occurred.",
+                Errors = errors,
+                ReferenceKey = Activity.Current!.RootId!
+            });
+
+        return await next();
+    }
+}
+
+{{- when "performance" -}}
+
+public sealed class {{ name }}<TRequest, TResponse>(ILogger<TRequest> logger)
+    : IPipelineBehavior<TRequest, TResponse> where TRequest
+    : notnull
+{
+    private readonly Stopwatch _timer = new();
+
+    public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
+    {
+        _timer.Start();
+
+        var response = await next();
+
+        _timer.Stop();
+
+        var elapsedMilliseconds = _timer.ElapsedMilliseconds;
+        if (elapsedMilliseconds <= 500)
+            return response;
+
+        var requestName = typeof(TRequest).Name;
+        logger.LogWarning("Long Running Request: {Name} ({ElapsedMilliseconds} milliseconds) {@Request}",
+            requestName, elapsedMilliseconds, request);
+
+        return response;
+    }
+}
+
+{{- else -}}
+
+public sealed class {{ name }}{{ type | string.capitalize }}Behavior<TRequest, TResponse> 
+    : IPipelineBehavior<TRequest, TResponse>
+{
+    public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
+    {
+        return await next(cancellationToken);
+    }
+}
+
+{{- end -}}

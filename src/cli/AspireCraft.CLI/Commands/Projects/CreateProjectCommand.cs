@@ -14,91 +14,119 @@ public sealed class CreateProjectCommand : Command<CreateProjectCommand.Settings
 
     public override int Execute(CommandContext context, Settings settings, CancellationToken cancellationToken)
     {
-        ConsoleHeader();
-        AnsiConsole.MarkupLine("[grey]┌[/] [yellow]Let's get started[/]");
+        try
+        {
+            ConsoleHeader();
+            AnsiConsole.MarkupLine("[grey]┌[/] [yellow]Let's get started[/]");
 
-        var prompts = new PromptBuilder()
-            .AddProjectSetupPrompts()
-            .AddArchitecturePrompts()
-            .AddDatabasePrompts()
-            .AddIntegrationPrompts()
-            .AddSecurityPrompts()
-            .AddTestPrompts()
-            .Build();
+            var prompts = new PromptBuilder()
+                .AddProjectSetupPrompts()
+                .AddArchitecturePrompts()
+                .AddDatabasePrompts()
+                .AddIntegrationPrompts()
+                .AddSecurityPrompts()
+                .AddTestPrompts()
+                .Build();
 
-        var wizard = new PromptWizard();
-        var userInputs = wizard.Ask(prompts);
-        var projectInfo = wizard.GetInputs(userInputs);
-        projectInfo.ProjectName = projectInfo.ProjectName.TrimAll() + ".Backend";
+            var wizard = new PromptWizard();
+            var userInputs = wizard.Ask(prompts);
+            var projectInfo = wizard.GetInputs(userInputs);
+            projectInfo.ProjectName = projectInfo.ProjectName.TrimAll() + ".Backend";
 
-        var templateLoader = new TemplateLoader();
-        var templatePath = Path.Combine(AppContext.BaseDirectory, "templates", "architectures", $"{projectInfo.Template.TrimAll()}.json");
-        var template = templateLoader.Load(templatePath);
+            var templateLoader = new TemplateLoader();
+            var templatePath = Path.Combine(AppContext.BaseDirectory, "templates", "architecture", $"{projectInfo.Template.TrimAll()}.json");
+            var template = templateLoader.Load(templatePath);
 
-        var solutionGenerator = new SolutionGenerator();
-        var projectGenerator = new ProjectGenerator();
-        var referenceGenerator = new ReferenceGenerator();
-        var templateGenerator = new TemplateGenerator();
+            var solutionGenerator = new SolutionGenerator();
+            var projectGenerator = new ProjectGenerator();
+            var referenceGenerator = new ReferenceGenerator();
+            var packageGenerator = new PackageGenerator();
+            var templateGenerator = new MetadataGenerator();
 
-        var table = new Table()
-            .NoBorder()
-            .HideHeaders()
-            .AddColumn(new TableColumn("Icon").Padding(0, 0, 0, 0))
-            .AddColumn(new TableColumn("Status").Padding(0, 0, 0, 0));
+            var table = new Table()
+                .NoBorder()
+                .HideHeaders()
+                .AddColumn(new TableColumn("Icon").Padding(0, 0, 0, 0))
+                .AddColumn(new TableColumn("Status").Padding(0, 0, 0, 0));
 
-        AnsiConsole.MarkupLine("[grey]│[/] ");
-        AnsiConsole.Live(table)
-            .Start(ctx =>
+            var label = "[grey]│[/] ";
+            var currentStep = 0;
+            var steps = new List<string>
             {
-                void SetInProgress(int row, string label)
+                "Creating solution",
+                "Generating projects",
+                "Applying references",
+                "Adding packages",
+                 "Building template",
+            };
+
+            foreach (var step in steps)
+            {
+                table.AddRow(label, step);
+            }
+
+            AnsiConsole.MarkupLine("[grey]│[/] ");
+            AnsiConsole.Live(table)
+                .Start(ctx =>
                 {
-                    table.UpdateCell(row, 1, $"[grey]{label} - In-Progress[/]");
-                    ctx.Refresh();
-                }
+                    int GetIndex(string label) => steps.IndexOf(label);
 
-                void SetCompleted(int row, string label)
-                {
-                    table.UpdateCell(row, 1, $"[green]{label} - Completed[/]");
-                    ctx.Refresh();
-                }
+                    void SetStatus(string label, string icon, string color, string status)
+                    {
+                        int row = GetIndex(label);
+                        table.UpdateCell(row, 0, $"[{color}]{Markup.Escape(icon)}[/]");
+                        table.UpdateCell(row, 1, $"[{color}]{Markup.Escape(label)} - {Markup.Escape(status)}[/]");
+                        ctx.Refresh();
+                    }
 
-                var iconLabel = "[grey]│[/]";
-                var templateTask = "Generating template";
-                var solutiontask = "Creating solution";
-                var projectTask = "Generating project";
-                var referenceTask = "Applying reference";
+                    try
+                    {
+                        currentStep = GetIndex("Creating solution");
+                        SetStatus(steps[currentStep], "○", "yellow", "Running...");
+                        projectInfo.SolutionPath = solutionGenerator.Create(projectInfo.ProjectName, GetOutputPath());
+                        SetStatus(steps[currentStep], "✔", "green", "Done");
 
-                table.AddRow(iconLabel, templateTask);
-                table.AddRow(iconLabel, solutiontask);
-                table.AddRow(iconLabel, projectTask);
-                table.AddRow(iconLabel, referenceTask);
-                ctx.Refresh();
+                        currentStep = GetIndex("Generating projects");
+                        SetStatus(steps[currentStep], "○", "yellow", "Running...");
+                        projectGenerator.Generate(projectInfo, template);
+                        SetStatus(steps[currentStep], "✔", "green", "Done");
 
-                SetInProgress(0, solutiontask);
-                projectInfo.SolutionPath = solutionGenerator.Create(projectInfo.ProjectName, GetOutputPath());
-                SetCompleted(0, solutiontask);
+                        currentStep = GetIndex("Applying references");
+                        SetStatus(steps[currentStep], "○", "yellow", "Running...");
+                        referenceGenerator.ApplyReferences(projectInfo, template);
+                        SetStatus(steps[currentStep], "✔", "green", "Done");
 
-                SetInProgress(1, projectTask);
-                projectGenerator.Generate(projectInfo, template);
-                SetCompleted(1, projectTask);
+                        currentStep = GetIndex("Adding packages");
+                        SetStatus(steps[currentStep], "○", "yellow", "Installing...");
+                        packageGenerator.Generate(projectInfo, template);
+                        SetStatus(steps[currentStep], "✔", "green", "Done");
 
-                SetInProgress(2, referenceTask);
-                referenceGenerator.ApplyReferences(projectInfo, template);
-                SetCompleted(2, referenceTask);
+                        currentStep = GetIndex("Building template");
+                        SetStatus(steps[currentStep], "○", "yellow", "Generating...");
+                        templateGenerator.Generate(projectInfo, template);
+                        SetStatus(steps[currentStep], "✔", "green", "Done");
+                    }
+                    catch (Exception ex)
+                    {
+                        SetStatus(steps[currentStep], "✘", "red", $"Failed: {ex.Message}");
+                        throw;
+                    }
+                });
 
-                SetInProgress(3, templateTask);
-                templateGenerator.Generate(projectInfo);
-                SetCompleted(3, templateTask);
-            });
+            AnsiConsole.MarkupLine("[grey]│[/] ");
+            AnsiConsole.MarkupLine("[grey]└[/] [yellow]Project generated successfully![/]");
 
-        AnsiConsole.MarkupLine("[grey]│[/] ");
-        AnsiConsole.MarkupLine("[grey]└[/] [yellow]Project generated successfully![/]");
+            ShowMigrationBanner(projectInfo.ProjectName);
+        }
+        catch (Exception ex)
+        {
+            ShowFailureBanner(ex.Message);
+        }
 
-        ShowMigrationBanner(projectInfo.ProjectName);
         return 0;
     }
 
-    private string GetOutputPath()
+    private static string GetOutputPath()
     {
 #if DEBUG
         var localFolder = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
@@ -108,7 +136,7 @@ public sealed class CreateProjectCommand : Command<CreateProjectCommand.Settings
 #endif
     }
 
-    private void ConsoleHeader()
+    private static void ConsoleHeader()
     {
         AnsiConsole.Write(new FigletText("ASPIRE CRAFT").Color(Color.Cyan1));
 
@@ -123,7 +151,7 @@ public sealed class CreateProjectCommand : Command<CreateProjectCommand.Settings
         AnsiConsole.WriteLine();
     }
 
-    private void ShowMigrationBanner(string projectName)
+    private static void ShowMigrationBanner(string projectName)
     {
         AnsiConsole.WriteLine();
         var panel = new Panel(
@@ -139,7 +167,26 @@ public sealed class CreateProjectCommand : Command<CreateProjectCommand.Settings
         AnsiConsole.Write(panel);
     }
 
-    private string GetAppVersion()
+    private static void ShowFailureBanner(string errorMessage)
+    {
+        AnsiConsole.WriteLine();
+
+        var panel = new Panel(
+                new Rows(
+                    new Markup($"[red]► Error:[/]"),
+                    new Markup($"[dim]► Message:[/] {Markup.Escape(errorMessage)}"),
+                    new Markup($"[yellow]► Please check logs or try 'dotnet clean' and retry.[/]")
+                )
+            )
+            .Header("[red] [bold]OPERATION FAILED[/] [/]")
+            .Border(BoxBorder.Rounded)
+            .BorderColor(Color.Red)
+            .Padding(3, 1, 3, 1);
+
+        AnsiConsole.Write(panel);
+    }
+
+    private static string GetAppVersion()
     {
         var assembly = Assembly.GetExecutingAssembly();
         var versionAttr = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>();

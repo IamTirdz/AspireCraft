@@ -1,0 +1,79 @@
+{{ for item in usings ~}}
+using {{ item }};
+{{ end ~}}
+
+namespace {{ namespace }};
+
+{{ case variant -}}
+{{- when "error" -}}
+
+public sealed class ErrorResponse
+{
+    public ErrorResponse()
+    {
+    }
+
+    public ErrorResponse(string message, string referenceKey = null!, int? code = null, string codeInfo = null!)
+    {
+        Message = message;
+        ReferenceKey = referenceKey;
+        Code = code;
+        CodeInfo = codeInfo;
+    }
+
+    public string Message { get; set; } = null!;
+    public string ReferenceKey { get; set; } = null!;
+    public int? Code { get; set; }
+    public string CodeInfo { get; set; } = null!;
+    public IDictionary<string, string[]> Errors { get; set; } = null!;
+}
+
+{{- when "pagination" -}}
+
+public sealed class PaginatedResponse<T>
+{
+    public PaginatedResponse(List<T> source, int? page = 1, int? limit = 10)
+    {
+        var totalCount = source.Count;
+        var items = source.Skip((page!.Value - 1) * limit!.Value).Take(limit!.Value).ToList();
+
+        Data = items;
+        Page = page.Value;
+        Limit = limit.Value;
+        TotalCount = totalCount;
+        TotalPages = (int)Math.Ceiling(totalCount / (double)limit);
+    }
+
+    public IEnumerable<T> Data { get; set; }
+    public int Page { get; set; }
+    public int Limit { get; set; }
+    public int TotalCount { get; set; }
+    public int TotalPages { get; set; }
+}
+
+{{- when "user-identity" -}}
+
+public sealed class {{ name }} : IdentityUser<Guid>
+{
+    public string FirstName { get; set; } = string.Empty;
+    public string LastName { get; set; } = string.Empty;
+    public DateTime CreatedAt { get; set; }
+    public DateTime? UpdatedAt { get; set; }
+}
+
+{{- when "role-identity" -}}
+
+public sealed class {{ name }} : IdentityRole<Guid>
+{
+    public {{ name }}() { }
+
+    public {{ name }}(string roleName, string? description = null)
+    {
+        Name = roleName;
+        Description = description;
+    }
+
+    public string? Description { get; set; }
+}
+
+{{- end ~}}

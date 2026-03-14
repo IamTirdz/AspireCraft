@@ -1,0 +1,68 @@
+{{ for item in usings ~}}
+using {{ item }};
+{{ end ~}}
+
+namespace {{ namespace }};
+
+public sealed class {{ name }} : IMiddleware
+{
+    private readonly ILogger<{{ name }}> _logger;
+
+    public {{ name }}(ILogger<{{ name }}> logger)
+    {
+        _logger = logger;
+    }
+	
+	public async Task InvokeAsync(HttpContext context, RequestDelegate next)
+    {
+        try
+        {
+            context.Response.Headers["OperationId"] = Activity.Current!.RootId;
+            await next(context);
+        }
+        catch (Exception err)
+        {
+            await HandleExceptionAsync(context, err);
+        }
+    }
+	
+	private async Task HandleExceptionAsync(HttpContext httpContext, Exception ex)
+    {
+        var statusCode = ex switch
+        {
+            BadRequestException => HttpStatusCode.BadRequest,
+            UnauthorizedException => HttpStatusCode.Unauthorized,
+            ForbiddenException => HttpStatusCode.Forbidden,
+            NotFoundException => HttpStatusCode.NotFound,
+            ValidationException => HttpStatusCode.UnprocessableEntity,
+            _ => HttpStatusCode.InternalServerError
+        };
+		
+		var baseMessage = "An unhandled exception has occurred.";
+		var errorResponse = ex is BaseException baseException
+            ? baseException.ErrorResponse!
+            : new ErrorResponse();
+		
+		if (errorResponse.Code == null) 
+		{
+			errorResponse.Code = (int)statusCode;
+		}
+		if (errorResponse.CodeInfo == null)
+		{
+			errorResponse.CodeInfo = statusCode.ToString();
+		}
+		
+		errorResponse.Message = ex.Message;
+        if (statusCode == HttpStatusCode.InternalServerError)
+        {
+            errorResponse.Message = baseMessage;
+        }
+
+        var result = JsonSerializer.Serialize(errorResponse);
+
+        httpContext.Response.ContentType = "application/json";
+        httpContext.Response.StatusCode = (int)statusCode;
+		
+        await httpContext.Response.WriteAsync(result);
+    }
+}

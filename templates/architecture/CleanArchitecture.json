@@ -1,0 +1,453 @@
+{
+  "name": "clean-architecture",
+  "description": "Clean Architecture with CQRS",
+  "projects": [
+    {
+      "name": "{{ProjectName}}.API",
+      "type": "webapi",
+      "path": "src/{{ProjectName}}.API"
+    },
+    {
+      "name": "{{ProjectName}}.Application",
+      "type": "classlib",
+      "path": "src/{{ProjectName}}.Application"
+    },
+    {
+      "name": "{{ProjectName}}.Domain",
+      "type": "classlib",
+      "path": "src/{{ProjectName}}.Domain"
+    },
+    {
+      "name": "{{ProjectName}}.Infrastructure",
+      "type": "classlib",
+      "path": "src/{{ProjectName}}.Infrastructure"
+    },
+    {
+      "name": "{{ProjectName}}.UnitTests",
+      "type": "xunit",
+      "path": "tests/{{ProjectName}}.UnitTests"
+    },
+    {
+      "name": "{{ProjectName}}.IntegrationTests",
+      "type": "xunit",
+      "path": "tests/{{ProjectName}}.IntegrationTests"
+    },
+    {
+      "name": "{{ProjectName}}.ArchitectureTests",
+      "type": "xunit",
+      "path": "tests/{{ProjectName}}.ArchitectureTests"
+    },
+    {
+      "name": "{{ProjectName}}.AppHost",
+      "type": "aspire-apphost",
+      "path": "host/{{ProjectName}}.AppHost"
+    },
+    {
+      "name": "{{ProjectName}}.ServiceDefaults",
+      "type": "aspire-servicedefaults",
+      "path": "host/{{ProjectName}}.ServiceDefaults"
+    }
+  ],
+  "dependencies": [
+    {
+      "project": "API",
+      "dependency": "Application"
+    },
+    {
+      "project": "API",
+      "dependency": "Infrastructure"
+    },
+    {
+      "project": "Infrastructure",
+      "dependency": "Application"
+    },
+    {
+      "project": "Infrastructure",
+      "dependency": "Domain"
+    },
+    {
+      "project": "Application",
+      "dependency": "Domain"
+    },
+    {
+      "project": "UnitTests",
+      "dependency": "Application"
+    },
+    {
+      "project": "IntegrationTests",
+      "dependency": "API"
+    },
+    {
+      "project": "IntegrationTests",
+      "dependency": "Infrastructure"
+    },
+    {
+      "project": "ArchitectureTests",
+      "dependency": "Domain"
+    },
+    {
+      "project": "ArchitectureTests",
+      "dependency": "Application"
+    },
+    {
+      "project": "API",
+      "dependency": "ServiceDefaults"
+    },
+    {
+      "project": "AppHost",
+      "dependency": "API"
+    }
+  ],
+  "packages": [
+    {
+      "project": "API",
+      "packages": [
+        "Asp.Versioning.Mvc.ApiExplorer",
+        "Microsoft.EntityFrameworkCore.Design",
+        "Microsoft.AspNetCore.Authentication.JwtBearer",
+        "NSwag.AspNetCore"
+      ]
+    },
+    {
+      "project": "Application",
+      "packages": [
+        "AutoMapper",
+        "FluentValidation.DependencyInjectionExtensions",
+        "MediatR",
+        "Microsoft.Extensions.DependencyInjection",
+        "Microsoft.Extensions.Configuration",
+		"Microsoft.Extensions.Hosting"
+      ]
+    },
+    {
+      "project": "Infrastructure",
+      "packages": [
+        "Microsoft.EntityFrameworkCore.SqlServer",
+        "Microsoft.EntityFrameworkCore.Tools",
+        "Microsoft.AspNetCore.Identity.EntityFrameworkCore",
+		"Microsoft.Extensions.Hosting",
+		"Aspire.Npgsql.EntityFrameworkCore.PostgreSQL",
+		"Aspire.StackExchange.Redis"
+      ]
+    },
+    {
+      "project": "UnitTests",
+      "packages": [
+        "Moq",
+        "FluentAssertions"
+      ]
+    },
+	{
+      "project": "IntegrationTests",
+      "packages": [
+        "Moq",
+        "FluentAssertions"
+      ]
+    },
+	{
+      "project": "ArchitectureTests",
+      "packages": [
+        "Moq",
+        "FluentAssertions"
+      ]
+    },
+	{
+      "project": "AppHost",
+      "packages": [
+		"Aspire.Hosting.AppHost",        
+        "Aspire.Hosting.Redis",
+		"Aspire.Hosting.PostgreSQL",
+		"Aspire.Hosting.SqlServer",
+		"Aspire.Hosting.MySql"
+      ]
+    }
+  ],
+  "metadata": [
+    {
+      "name": "Program",
+      "template": "scriban/program.sbn",
+      "variant": "host",
+      "path": "AppHost",
+	  "type": "program"
+    },
+    {
+      "name": "Program",
+      "template": "scriban/program.sbn",
+      "variant": "api",
+      "path": "API",
+	  "type": "program"
+    },
+    {
+      "name": "ExceptionHandlingMiddleware",
+      "template": "scriban/middleware.sbn",
+      "path": "API/Middlewares",
+	  "type": "middleware"
+    },
+    {
+      "name": "ApiControllerBase",
+      "template": "scriban/controller.sbn",
+      "variant": "base",
+      "path": "API/Controllers",
+	  "type": "controller"
+    },
+	{
+	  "name": "ConfigureServices",
+	  "template": "scriban/dependency-injection.sbn",
+	  "variant": "api",
+	  "path": "API"  ,
+	  "type": "dependency-injection"
+	},
+    {
+      "name": "{{feature}}sController",
+      "template": "scriban/controller.sbn",
+      "variant": "controller",
+      "path": "API/Controllers/v1",
+      "base": "ApiControllerBase",
+	  "type": "controller"
+    },
+	{
+      "name": "BaseEntity",
+      "template": "scriban/entity.sbn",
+      "variant": "base",
+      "path": "Domain/Entities",
+	  "type": "entity"
+    },
+    {
+      "name": "AuditableEntity",
+      "template": "scriban/entity.sbn",
+      "variant": "auditable",
+      "path": "Domain/Entities",
+	  "type": "entity"
+    },
+    {
+      "name": "{{feature}}",
+      "template": "scriban/entity.sbn",
+      "variant": "entity",
+      "path": "Domain/Entities",
+      "base": "AuditableEntity",
+	  "type": "entity"
+    },
+    {
+      "name": "IRepository",
+      "template": "scriban/repository.sbn",
+      "variant": "base-interface",
+      "path": "Domain/Interfaces",
+	  "type": "repository"
+    },
+    {
+      "name": "RepositoryBase",
+      "template": "scriban/repository.sbn",
+      "variant": "base",
+      "path": "Infrastructure/Persistence/Repositories",
+      "base": "IRepository",
+	  "type": "repository"
+    },
+    {
+      "name": "I{{feature}}Repository",
+      "template": "scriban/repository.sbn",
+      "variant": "interface",
+      "path": "Domain/Interfaces",
+	  "type": "repository"
+    },
+    {
+      "name": "{{feature}}Repository",
+      "template": "scriban/repository.sbn",
+      "variant": "implementation",
+      "path": "Infrastructure/Persistence/Repositories",
+	  "type": "repository"
+    },    
+    {
+      "name": "ApplicationDbContext",
+      "template": "scriban/dbcontext.sbn",
+      "path": "Infrastructure/Persistence",
+	  "type": "dbcontext"
+    },
+	{
+	  "name": "ConfigureServices",
+	  "template": "scriban/dependency-injection.sbn",
+	  "variant": "infrastructure",
+	  "path": "Infrastructure"	  ,
+	  "type": "dependency-injection"
+	},
+    {
+      "name": "{{feature}}Profile",
+      "template": "scriban/class.sbn",
+	  "variant": "profile",
+      "path": "Application/Mappings",
+	  "type": "class"
+    },
+    {
+      "name": "LoggingBehavior",
+      "template": "scriban/pipeline.sbn",
+      "variant": "logging",
+      "path": "Application/Common/Behaviors",
+	  "type": "pipeline"
+    },
+    {
+      "name": "ValidationBehavior",
+      "template": "scriban/pipeline.sbn",
+      "variant": "validation",
+      "path": "Application/Common/Behaviors",
+	  "type": "pipeline"
+    },
+    {
+      "name": "PerformanceBehavior",
+      "template": "scriban/pipeline.sbn",
+      "variant": "performance",
+      "path": "Application/Common/Behaviors",
+	  "type": "pipeline"
+    },
+    {
+      "name": "AuthorizationBehavior",
+      "template": "scriban/pipeline.sbn",
+      "variant": "behavior",
+      "path": "Application/Common/Behaviors",
+	  "type": "pipeline"
+    },
+    {
+      "name": "ErrorResponse",
+      "template": "scriban/model.sbn",
+      "variant": "error",
+      "path": "Application/Common/Models",
+	  "type": "model"
+    },
+    {
+      "name": "PaginatedResponse",
+      "template": "scriban/model.sbn",
+      "variant": "pagination",
+      "path": "Application/Common/Models",
+	  "type": "model"
+    },
+	{
+      "name": "ApplicationUser",
+      "template": "scriban/model.sbn",
+      "variant": "user-identity",
+      "path": "Infrastructure/Identity",
+	  "type": "model"
+    },
+	{
+      "name": "ApplicationRole",
+      "template": "scriban/model.sbn",
+      "variant": "role-identity",
+      "path": "Infrastructure/Identity",
+	  "type": "model"
+    },
+    {
+      "name": "BaseException",
+      "template": "scriban/exception.sbn",
+      "variant": "base",
+      "path": "Application/Common/Exceptions",
+	  "type": "exception"
+    },
+    {
+      "name": "BadRequestException",
+      "template": "scriban/exception.sbn",
+      "variant": "implementation",
+      "path": "Application/Common/Exceptions",
+	  "type": "exception",
+	  "base": "BaseException"
+    },
+    {
+      "name": "NotFoundException",
+      "template": "scriban/exception.sbn",
+      "variant": "implementation",
+      "path": "Application/Common/Exceptions",
+	  "type": "exception",
+	  "base": "BaseException"
+    },
+    {
+      "name": "ForbiddenException",
+      "template": "scriban/exception.sbn",
+      "variant": "implementation",
+      "path": "Application/Common/Exceptions",
+	  "type": "exception",
+	  "base": "BaseException"
+    },
+    {
+      "name": "UnauthorizedException",
+      "template": "scriban/exception.sbn",
+      "variant": "implementation",
+      "path": "Application/Common/Exceptions",
+	  "type": "exception",
+	  "base": "BaseException"
+    },
+    {
+      "name": "ValidationException",
+      "template": "scriban/exception.sbn",
+      "variant": "implementation",
+      "path": "Application/Common/Exceptions",
+	  "type": "exception",
+	  "base": "BaseException"
+    },
+    {
+      "name": "Create{{feature}}Command",
+      "template": "scriban/class.sbn",
+      "variant": "command",
+      "path": "Application/{{feature}}s/Commands/Create{{feature}}",
+	  "type": "class"
+    },
+    {
+      "name": "Get{{feature}}sQuery",
+      "template": "scriban/class.sbn",
+      "variant": "queries",
+      "path": "Application/{{feature}}s/Queries/Get{{feature}}s",
+	  "type": "class"
+    },
+    {
+      "name": "Get{{feature}}ByIdQuery",
+      "template": "scriban/class.sbn",
+      "variant": "query",
+      "path": "Application/{{feature}}s/Queries/Get{{feature}}ById",
+	  "type": "class"
+    },
+    {
+      "name": "{{feature}}Dto",
+      "template": "scriban/class.sbn",
+      "variant": "dto",
+      "path": "Application/{{feature}}s/Queries/Get{{feature}}s",
+	  "type": "class"
+    },
+	{
+	  "name": "ConfigureServices",
+	  "template": "scriban/dependency-injection.sbn",
+	  "variant": "application",
+	  "path": "Application"	  ,
+	  "type": "dependency-injection"
+	}
+  ],
+  "services": [
+    {
+      "name": "SendGrid",
+      "category": "email",
+      "provider": "sendgrid",
+      "project": "Infrastructure",
+      "template": "services/email/sendgrid",
+      "packages": [
+        "SendGrid"
+      ],
+      "condition": "email == 'sendgrid'"
+    },
+    {
+      "name": "Mailgun",
+      "category": "email",
+      "provider": "mailgun",
+      "project": "Infrastructure",
+      "template": "services/email/mailgun",
+      "packages": [
+        "Mailgun"
+      ],
+      "condition": "email == 'mailgun'"
+    },
+    {
+      "name": "AWS S3",
+      "category": "storage",
+      "provider": "aws-s3",
+      "project": "Infrastructure",
+      "template": "services/storage/s3",
+      "packages": [
+        "AWSSDK.S3"
+      ],
+      "condition": "storage == 'aws-s3'"
+    }
+  ]
+}
